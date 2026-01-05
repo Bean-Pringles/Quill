@@ -6,22 +6,6 @@
   <h1> </h1>
 </div>
 
-<div class="large-space-div" align="center">
-  <img src="https://github.com/Bean-Pringles/Quill/blob/main/images/logo/logo.jpg" alt="Quill Logo" width="280" height="280">
-  <h3>As Light as a Feather</h3>
-  <!-- Badges -->
-  <img alt="GitHub stars" src="https://img.shields.io/github/stars/Bean-Pringles/Quill">
-  <img alt="Language" src="https://img.shields.io/badge/Language-Nim-orange">
-  <img alt="OS" src="https://img.shields.io/badge/OS-Windows,%20Linux,%20macOS-green">
-  <img alt="Version" src="https://img.shields.io/badge/Version-v0.1.0-purple">
-  <img alt="CPU" src="https://img.shields.io/badge/CPU-x86-yellow">
-  <img alt="Downloads" src="https://img.shields.io/github/downloads/Bean-Pringles/Quill/total">
-  <img alt="Repo size" src="https://img.shields.io/github/repo-size/Bean-Pringles/Quill">
-  <img alt="Last commit" src="https://img.shields.io/github/last-commit/Bean-Pringles/Quill">
-  <img alt="404" src="https://img.shields.io/badge/404-Not%20Found-lightgrey">
-  <h1></h1>
-</div>
-
 ## Setup
 
 To set up this project, make sure Python and the Python library **Pillow** are installed. Then, from the setup directory, run:
