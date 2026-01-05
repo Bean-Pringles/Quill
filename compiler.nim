@@ -42,6 +42,11 @@ when isMainModule:
         echo "[!] The ", ext, " filetype is not supported."
         quit(1)
 
-    for lineNumber in countLinesInFile(filename):
+    let totalLines = countLinesInFile(filename)
+
+    if totalLines < 0:
+        quit(1)
+
+    for lineNumber in 0 ..< totalLines:
         let line = readNthLineLargeFile(filename, lineNumber)
         let parser = initParser(line)
