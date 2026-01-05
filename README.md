@@ -1,6 +1,6 @@
 <div class="large-space-div" align="center">
-  <img src="https://github.com/Bean-Pringles/Quill/blob/main/images/logo/logo.jpg" alt="Quill Logo">
-  <h3>Readable C</h3>
+  <img src="https://github.com/Bean-Pringles/Quill/blob/main/images/logo/logo.jpg" alt="Quill Logo" width="280" height="280">
+  <h3>As Light as a Feather</h3>
   <!-- The functional badge code -->
   <img alt="Static Badge" src="https://img.shields.io/github/stars/Bean-Pringles/Quill"> <img alt="Static Badge" src="https://img.shields.io/badge/Language-Nim-orange"> <img alt="Static Badge" src="https://img.shields.io/badge/OS-Windows, Linux, MacOS-green"> <img alt="Static Badge" src="https://img.shields.io/badge/Version-v0.1.0-purple"> <img alt="Static Badge" src="https://img.shields.io/badge/CPU-x86-yellow"> <img alt="Static Badge" src=https://img.shields.io/github/downloads/Bean-Pringles/Quill/total.svg"> <img alt="Static Badge" src="https://img.shields.io/github/repo-size/Bean-Pringles/Quill"> <img alt="Static Badge" src="https://img.shields.io/github/last-commit/Bean-Pringles/Quill"> <img alt="Static Badge"src="https://img.shields.io/badge/404-Not%20Found-lightgrey">
   <h1> </h1>
