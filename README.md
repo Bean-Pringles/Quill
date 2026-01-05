@@ -1,6 +1,32 @@
+<div class="large-space-div" align="center">
+  <img src="https://github.com/Bean-Pringles/Quill/blob/main/images/logo/logo.jpg" alt="Quill Logo">
+  <h3>Readable C</h3>
+  <!-- The functional badge code -->
+  <img alt="Static Badge" src="https://img.shields.io/github/stars/Bean-Pringles/Quill"> <img alt="Static Badge" src="https://img.shields.io/badge/Language-Nim-orange"> <img alt="Static Badge" src="https://img.shields.io/badge/OS-Windows, Linux, MacOS-green"> <img alt="Static Badge" src="https://img.shields.io/badge/Version-v0.1.0-purple"> <img alt="Static Badge" src="https://img.shields.io/badge/CPU-x86-yellow"> <img alt="Static Badge" src=https://img.shields.io/github/downloads/Bean-Pringles/Quill/total.svg"> <img alt="Static Badge" src="https://img.shields.io/github/repo-size/Bean-Pringles/Quill"> <img alt="Static Badge" src="https://img.shields.io/github/last-commit/Bean-Pringles/Quill"> <img alt="Static Badge"src="https://img.shields.io/badge/404-Not%20Found-lightgrey">
+  <h1> </h1>
+</div>
+
+## Setup
+
+To setup this project, make sure python and the python library pillow are installed. Then, from the setup directory, run:
+
+Windows:
+
+```shell
+python setup.py
+```
+
+MacOS/Linux:
+
+```shell
+python3 setup.py
+```
+
+Please make sure you run this command with elavated privilages so that it can register the file type and file icon.
+
 ## Compiling the Compiler
 
-To compile, run:
+To compile, run the following commands in the src directory:
 
 ```shell
 nim r build.nim

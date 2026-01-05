@@ -27,7 +27,7 @@ when isMainModule:
     let args = commandLineParams()
 
     if args.len == 0:
-        echo "[!] Compiler and Language Written by Bean_Pringles. https://github.com/Bean_Pringles"
+        echo "[*] Compiler and Language Written by Bean_Pringles. https://github.com/Bean_Pringles"
         quit(1)
 
     let filename = args[0]
