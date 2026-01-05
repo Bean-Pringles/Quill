@@ -49,4 +49,11 @@ when isMainModule:
 
     for lineNumber in 0 ..< totalLines:
         let line = readNthLineLargeFile(filename, lineNumber)
-        let parser = initParser(line)
+        
+        var parser = initParser(line)
+        let ast = parser.parse()
+
+        let irCode = generateIR(ast)
+        
+        if irCode != "":
+            echo irCode

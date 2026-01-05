@@ -1,5 +1,6 @@
-proc printCmd(args: seq[string]) =
-    for arg in args:
-        echo arg
+proc printIRGenerator(args: seq[string]): string =
+    if args.len == 0:
+        return ""
+    return "PRINT " & args[0]
 
-registerCommand("print", printCmd)
+registerIRGenerator("print", printIRGenerator)

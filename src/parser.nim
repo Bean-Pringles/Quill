@@ -1,26 +1,29 @@
+import tables
+import strutils
+
 type
-    Node = ref object
-        case isCall: bool
+    Node* = ref object
+        case isCall*: bool
         of true:
-            commandName: string
-            args: seq[Node]
+            commandName*: string
+            args*: seq[Node]
         of false:
-            value: string
+            value*: string
 
     Parser = object
         text: string
         pos: int
         currentChar: char
 
-    CommandProc = proc(args: seq[string])
+    IRGenerator* = proc(args: seq[string]): string
 
-# Command registry - this will be populated by each command module
-var commandRegistry* = initTable[string, CommandProc]()
+# IR generator registry - maps command names to IR generation procedures
+var irGenerators* = initTable[string, IRGenerator]()
 
-proc registerCommand*(name: string, cmdProc: CommandProc) =
-    commandRegistry[name] = cmdProc
+proc registerIRGenerator*(name: string, generator: IRGenerator) =
+    irGenerators[name] = generator
 
-proc initParser(text: string): Parser =
+proc initParser*(text: string): Parser =
     result.text = text
     result.pos = 0
     result.currentChar = if text.len > 0: text[0] else: '\0'
@@ -99,15 +102,19 @@ proc parseCommandCall(p: var Parser): Node =
 
     result = Node(isCall: true, commandName: commandName, args: args)
 
-proc parse(p: var Parser): Node =
+proc parse*(p: var Parser): Node =
     return p.parseCommandCall()
 
-proc executeCommand(node: Node) =
+proc generateIR*(node: Node): string =
+    ## Generates IR code from the parsed command AST
     if node.isCall:
-        if commandRegistry.hasKey(node.commandName):
+        if irGenerators.hasKey(node.commandName):
             var argStrings: seq[string] = @[]
             for arg in node.args:
                 argStrings.add(arg.value)
-            commandRegistry[node.commandName](argStrings)
+            return irGenerators[node.commandName](argStrings)
         else:
             echo "Unknown command: ", node.commandName
+            return ""
+    else:
+        return ""
