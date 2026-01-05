@@ -1,0 +1,22 @@
+name: automatedIssueComment
+
+on:
+  issues:
+    types: [opened, reopened]
+
+jobs:
+  post_comment:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Add automated greeting comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: "Thank you for making an issue. Please allow up to a week for us to respond."
+            });
