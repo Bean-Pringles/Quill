@@ -34,7 +34,22 @@ Please make sure you run this command with **elevated privileges** so that it ca
 
 ## Compiling the Compiler
 
-To compile, run the following commands in the `src` directory:
+To compile, run the following commands in the `scripts` directory:
+
+### Windows
+
+```shell
+./build
+```
+
+### MacOS/Linux
+
+```shell
+chmod +x build.sh
+./build.sh
+```
+
+This executes the built in build script that generates the commands.nim and compiles it. If you want to do it manually, you can also run the following steps:
 
 ```shell
 nim r build.nim

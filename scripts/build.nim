@@ -16,5 +16,5 @@ for file in walkDir("cmds"):
     let moduleName = file.path.splitFile().name
     includeContent &= "include \"" & moduleName & ".nim\"\n"
 
-writeFile("cmds/commands.nim", includeContent)
+writeFile("../src/cmds/commands.nim", includeContent)
 echo "Generated cmds/commands.nim with all command imports"

@@ -4,6 +4,7 @@ import tables
 
 include "parser.nim"
 include "cmds/commands.nim"
+include "irWriter.nim"
 
 proc readNthLineLargeFile(filename: string, n: int): string =
     var currentLine = 0
