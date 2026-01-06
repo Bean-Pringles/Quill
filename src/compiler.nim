@@ -57,4 +57,4 @@ when isMainModule:
         let irCode = generateIR(ast)
         
         if irCode != "":
-            echo irCode
+            writeIR(irCode, splitFile(filename).name & ".ll")
