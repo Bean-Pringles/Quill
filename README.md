@@ -1,5 +1,5 @@
 <div class="large-space-div" align="center">
-  <img src="https://github.com/Bean-Pringles/Quill/blob/main/images/logo/logo.jpg" alt="Quill Logo" width="280" height="280">
+  <img src="https://github.com/Bean-Pringles/Quill/blob/main/assets/images/logo.jpg" alt="Quill Logo" width="280" height="280">
   <h3>As Light as a Feather</h3>
   <!-- The functional badge code -->
   <img alt="Static Badge" src="https://img.shields.io/github/stars/Bean-Pringles/Quill">
