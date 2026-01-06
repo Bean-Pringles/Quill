@@ -1,6 +1,8 @@
 import std/os
 import strutils
 import tables
+import std/files
+import osproc
 
 include "parser.nim"
 include "cmds/commands.nim"
@@ -23,6 +25,41 @@ proc countLinesInFile(filePath: string): int =
         echo "[!] Could not open or read file: ", filePath
         return -1
     return lineCount
+
+proc cleanup(filename: string, args: seq[string]) =
+    let irFile = splitFile(filename).name & ".ll"
+    let exeFile = splitFile(filename).name & ".exe"
+
+    if fileExists(irFile):
+        try:
+            removeFile(irFile)
+        except OSError:
+            echo "[!] Error removing IR file: ", cast[ptr OSError](getCurrentException()).msg
+
+    if fileExists(exeFile):
+        try:
+            moveFile(exeFile, joinPath(splitFile(filename).dir, exeFile))
+        except OSError:
+            echo "[!] Error moving executable file: ", cast[ptr OSError](getCurrentException()).msg
+
+
+proc runLLVMIR(filename: string, args: seq[string]) =
+    let irFile = splitFile(filename).name & ".ll"
+    
+    if not fileExists(irFile):
+        echo "[!] IR file not found: ", irFile
+        return
+
+    if not ("-ir" in args):
+        let command = "clang " & irFile & " -o " & splitFile(filename).name & ".exe"
+        let result = execProcess(command)
+        echo result
+        cleanup(filename, args)
+    else:
+        try:
+            moveFile(irFile, joinPath(splitFile(filename).dir, irFile))
+        except OSError:
+            echo "[!] Error moving IR file: ", cast[ptr OSError](getCurrentException()).msg
 
 when isMainModule:
     let args = commandLineParams()
@@ -48,6 +85,11 @@ when isMainModule:
     if totalLines < 0:
         quit(1)
 
+    try:
+        removeFile(splitFile(filename).name & ".ll")
+    except OSError:
+        echo "[!] Error removing file: ", cast[ptr OSError](getCurrentException()).msg
+
     for lineNumber in 0 ..< totalLines:
         let line = readNthLineLargeFile(filename, lineNumber)
         
@@ -58,3 +100,5 @@ when isMainModule:
         
         if irCode != "":
             writeIR(irCode, splitFile(filename).name & ".ll")
+
+    runLLVMIR(filename, args)
