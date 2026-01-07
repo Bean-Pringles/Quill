@@ -7,27 +7,47 @@ proc printIRGenerator(
     if args.len == 0:
         return ("", commandsCalled, commandNum)
 
-    let byteCount = args[0].len + 2
+    let byteCount = args[0].len + 1  # +1 for newline, no null terminator needed
 
     var irString = """
-; Define string
-@.str""" & $commandNum & """ = private constant [""" & $byteCount & """ x i8] c"""" & args[0] & """\0A\00"
+@.str""" & $commandNum & """ = private constant [""" & $byteCount & """ x i8] c"""" & args[0] & """\0A"
 
-; Main function
 define i32 @print""" & $commandNum & """() {
 entry:
-    %0 = getelementptr inbounds [""" & $byteCount & """ x i8], [""" & $byteCount & """ x i8]* @.str""" & $commandNum & """, i32 0, i32 0
-    %1 = call i32 (i8*, ...) @printf(i8* %0)
+    %str_ptr = getelementptr inbounds [""" & $byteCount & """ x i8], [""" & $byteCount & """ x i8]* @.str""" & $commandNum & """, i32 0, i32 0
+"""
+
+    # Platform-specific syscall
+    when defined(linux):
+        irString &= """    %result = call i64 @write(i32 1, i8* %str_ptr, i64 """ & $byteCount & """)
     ret i32 0
 }
 """
-
-    # Only declare printf once
-    if "print" notin commandsCalled:
-        commandsCalled.add("print")
-        irString = """
-; Declare printf
-declare i32 @printf(i8*, ...)
-""" & irString
+        # Only declare write syscall once
+        if "print" notin commandsCalled:
+            commandsCalled.add("print")
+            irString = "declare i64 @write(i32, i8*, i64)\n" & irString
+    
+    elif defined(windows):
+        irString &= """    %stdout = call i8* @GetStdHandle(i32 -11)
+    %bytes_written = alloca i32
+    %result = call i32 @WriteFile(i8* %stdout, i8* %str_ptr, i32 """ & $byteCount & """, i32* %bytes_written, i8* null)
+    ret i32 0
+}
+"""
+        # Only declare Windows API functions once
+        if "print" notin commandsCalled:
+            commandsCalled.add("print")
+            irString = "declare i8* @GetStdHandle(i32)\ndeclare i32 @WriteFile(i8*, i8*, i32, i32*, i8*)\n" & irString
+    
+    else:
+        # Fallback to write syscall for other Unix-like systems
+        irString &= """    %result = call i64 @write(i32 1, i8* %str_ptr, i64 """ & $byteCount & """)
+    ret i32 0
+}
+"""
+        if "print" notin commandsCalled:
+            commandsCalled.add("print")
+            irString = "declare i64 @write(i32, i8*, i64)\n" & irString
 
     return (irString, commandsCalled, commandNum + 1)
