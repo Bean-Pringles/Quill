@@ -1,8 +1,9 @@
 # Auto-generated - do not edit manually
 
-import std/os
-import strutils
-import strformat
-import tables
 import system
+import ../registry
+
 include "print.nim"
+
+proc initCommands*() =
+  registerIRGenerator("print", printIRGenerator)

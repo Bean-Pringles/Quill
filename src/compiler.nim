@@ -1,12 +1,13 @@
 import std/os
-import strutils
-import tables
-import std/files
 import osproc
 
-include "parser.nim"
-include "cmds/commands.nim"
-include "irWriter.nim"
+import parser
+import registry 
+import cmds/commands
+import irWriter
+
+# Initialize commands BEFORE processing any files
+initCommands()
 
 proc readNthLineLargeFile(filename: string, n: int): string =
     var currentLine = 0
@@ -14,7 +15,7 @@ proc readNthLineLargeFile(filename: string, n: int): string =
         if currentLine == n:
             return line
         inc currentLine
-    raise newException(IndexError, "[!] Error in reading file.")
+    raise newException(IndexDefect, "[!] Error in reading file.")
 
 proc countLinesInFile(filePath: string): int =
     var lineCount = 0
@@ -88,17 +89,39 @@ when isMainModule:
     try:
         removeFile(splitFile(filename).name & ".ll")
     except OSError:
-        echo "[!] Error removing file: ", cast[ptr OSError](getCurrentException()).msg
+        discard  # File doesn't exist, which is fine
 
+    var commandsCalled = newSeq[string]()
+    var commandNum = 0
+    var printCalls = newSeq[string]()  # Store the calls to print functions
+
+    # Write global declarations first
     for lineNumber in 0 ..< totalLines:
         let line = readNthLineLargeFile(filename, lineNumber)
         
         var parser = initParser(line)
         let ast = parser.parse()
 
-        let irCode = generateIR(ast)
+        let (irCode, newCommandsCalled, newCommandNum) = generateIR(ast, commandsCalled, commandNum)
+        commandsCalled = newCommandsCalled
+        commandNum = newCommandNum
         
         if irCode != "":
             writeIR(irCode, splitFile(filename).name & ".ll")
+            # Store the call for later
+            printCalls.add("  call i32 @print" & $(commandNum - 1) & "()")
+
+    # Now write the main function
+    writeIR("", splitFile(filename).name & ".ll")  # Empty line for readability
+    writeIR("define i32 @main() {", splitFile(filename).name & ".ll")
+    writeIR("entry:", splitFile(filename).name & ".ll")
+    
+    # Add all the print calls
+    for call in printCalls:
+        writeIR(call, splitFile(filename).name & ".ll")
+    
+    # Close the main function
+    writeIR("  ret i32 0", splitFile(filename).name & ".ll")
+    writeIR("}", splitFile(filename).name & ".ll")
 
     runLLVMIR(filename, args)
