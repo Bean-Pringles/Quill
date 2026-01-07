@@ -32,6 +32,20 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+echo [*] Removing old compiled test files...
+# Remove old test.exe, test.zip, and test.ll if they exist
+if [ -f "../src/test" ]; then
+    rm "../src/test"
+fi
+
+if [ -f "../src/test.ll" ]; then
+    rm "../src/test.ll"
+fi
+
+if [ -f "../src/test.zip" ]; then
+    rm "../src/test.zip"
+fi
+
 # Return to the original directory
 cd "$startDir" || exit 1
 

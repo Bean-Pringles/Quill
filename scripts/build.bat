@@ -28,6 +28,12 @@ IF ERRORLEVEL 1 (
     exit /b 1
 )
 
+echo [*] Removing old compiled test files...
+REM Remove old test.exe, test.zip, and test.ll if they exist
+IF EXIST ..\src\test.exe DEL ..\src\test.exe
+IF EXIST ..\src\test.ll DEL ..\src\test.ll
+IF EXIST ..\src\test.zip DEL ..\src\test.zip
+
 REM Return to original directory
 cd /d %startDir%
 echo [*] Build and compilation completed successfully!
