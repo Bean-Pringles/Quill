@@ -1,7 +1,6 @@
 import std/os
 import osproc
 import strutils 
-import sequtils 
 
 import parser
 import registry 
@@ -56,9 +55,9 @@ proc runLLVMIR(filename: string, args: seq[string]) =
     # Determine output binary name
     let outName =
       when defined(windows):
-        splitFile(filename).name & ".exe"
+        absolutePath(splitFile(filename).name & ".exe")
       else:
-        splitFile(filename).name
+        absolutePath(splitFile(filename).name)
     # Compile LLVM IR to binary with maximum size optimization
     try:
       let cmd = 
@@ -73,7 +72,21 @@ proc runLLVMIR(filename: string, args: seq[string]) =
       )
 
       if result.strip() != "":
-        echo "[clang output] ", result
+        echo "[*] Clang Output: ", result
+    
+        if "-zip" in args:
+            let zipCmd = 
+                when defined(windows):
+                    "tar.exe -a -c -f" & splitFile(filename).name & ".zip " & outName
+                else:
+                    "zip " & splitFile(filename).name & ".zip " & outName
+        
+            let result = execProcess(
+                zipCmd,
+            )
+
+            if result.strip() != "":
+                echo "[*] Zip Output: ", result
     
     except OSError as e:
       echo "[!] Error running clang. Make sure clang is installed and in PATH."
