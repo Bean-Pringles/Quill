@@ -4,6 +4,8 @@ import platform
 import subprocess
 import tempfile
 
+# Modding this so it doesnt say test in the commit message
+
 # ---------------- CONFIG ----------------
 EXT = ".qil"
 TYPE_NAME = "Quill.Source"
