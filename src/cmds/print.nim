@@ -1,16 +1,22 @@
 proc printIRGenerator(
     args: seq[string],
     commandsCalled: var seq[string],
-    commandNum: int
-): (string, seq[string], int) =
+    commandNum: int,
+    vars: var Table[string, (string, string)]
+): (string, seq[string], int, Table[string, (string, string)]) =
 
     if args.len == 0:
-        return ("", commandsCalled, commandNum)
+        return ("", commandsCalled, commandNum, vars)
+    
+    var mutArgs = args 
+    
+    if mutArgs[0] in vars:
+        mutArgs[0] = vars[mutArgs[0]][1]  # Get the value of the variable if it's a variable name 
 
-    let byteCount = args[0].len + 1  # +1 for newline, no null terminator needed
+    let byteCount = mutArgs[0].len + 1  # +1 for newline, no null terminator needed
 
     var irString = """
-@.str""" & $commandNum & """ = private constant [""" & $byteCount & """ x i8] c"""" & args[0] & """\0A"
+@.str""" & $commandNum & """ = private constant [""" & $byteCount & """ x i8] c"""" & mutArgs[0] & """\0A"
 
 define i32 @print""" & $commandNum & """() {
 entry:
@@ -50,4 +56,4 @@ entry:
             commandsCalled.add("print")
             irString = "declare i64 @write(i32, i8*, i64)\n" & irString
 
-    return (irString, commandsCalled, commandNum + 1)
+    return (irString, commandsCalled, commandNum + 1, vars)

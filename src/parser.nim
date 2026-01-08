@@ -1,6 +1,6 @@
 import tables
 import strutils
-import registry # Import the shared registry
+import registry as reg # Import the shared registry with alias
 
 type
     Node* = ref object
@@ -63,11 +63,61 @@ proc parseArgument(p: var Parser): Node =
 
     return Node(isCall: false, value: "")
 
+proc parseLetStatement(p: var Parser): Node =
+    ## Parses: let x: i32 = 4
+    p.skipWhitespace()
+    
+    # Skip "let" keyword (already consumed)
+    p.skipWhitespace()
+    
+    # Parse variable name
+    let varName = p.parseIdentifier()
+    p.skipWhitespace()
+    
+    # Expect ':'
+    if p.currentChar != ':':
+        echo "Expected ':' after variable name"
+        return Node(isCall: false, value: "")
+    p.advance()
+    p.skipWhitespace()
+    
+    # Parse type
+    let varType = p.parseIdentifier()
+    p.skipWhitespace()
+    
+    # Expect '='
+    if p.currentChar != '=':
+        echo "Expected '=' after type"
+        return Node(isCall: false, value: "")
+    p.advance()
+    p.skipWhitespace()
+    
+    # Parse value (number or identifier for now)
+    var value = ""
+    while p.currentChar != '\0' and not (p.currentChar in Whitespace):
+        value.add(p.currentChar)
+        p.advance()
+    
+    # Create a let command node with args: [varName, varType, value]
+    result = Node(
+        isCall: true,
+        commandName: "let",
+        args: @[
+            Node(isCall: false, value: varName),
+            Node(isCall: false, value: varType),
+            Node(isCall: false, value: value)
+        ]
+    )
+
 proc parseCommandCall(p: var Parser): Node =
     p.skipWhitespace()
 
     let commandName = p.parseIdentifier()
     p.skipWhitespace()
+    
+    # Special handling for "let" statement
+    if commandName == "let":
+        return p.parseLetStatement()
 
     if p.currentChar != '(':
         return Node(isCall: false, value: commandName)
@@ -98,19 +148,18 @@ proc parseCommandCall(p: var Parser): Node =
 proc parse*(p: var Parser): Node =
     return p.parseCommandCall()
 
-proc generateIR*(node: Node, commandsCalled: seq[string], commandNum: int): (
-        string, seq[string], int) =
+proc generateIR*(node: Node, commandsCalled: var seq[string], commandNum: int, vars: var Table[string, (string, string)]): (
+        string, seq[string], int, Table[string, (string, string)]) =
     ## Generates IR code from the parsed command AST
     if node.isCall:
-        if registry.irGenerators.hasKey(node.commandName):
+        if reg.irGenerators.hasKey(node.commandName):
             var argStrings: seq[string] = @[]
             for arg in node.args:
                 argStrings.add(arg.value)
-            var mutableCommandsCalled = commandsCalled
-            return registry.irGenerators[node.commandName](argStrings,
-                    mutableCommandsCalled, commandNum)
+            return reg.irGenerators[node.commandName](argStrings,
+                    commandsCalled, commandNum, vars)
         else:
             echo "Unknown command: ", node.commandName
-            return ("", commandsCalled, commandNum)
+            return ("", commandsCalled, commandNum, vars)
     else:
-        return ("", commandsCalled, commandNum)
+        return ("", commandsCalled, commandNum, vars)
