@@ -4,7 +4,6 @@ import strutils
 import system
 import tables
 import parser
-import registry
 import cmds/commands
 import irWriter
 

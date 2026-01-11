@@ -1,6 +1,3 @@
-import tables
-import strutils
-
 var printGlobalCounter = 0
 
 proc printIRGenerator(
