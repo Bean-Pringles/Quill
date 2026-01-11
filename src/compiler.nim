@@ -196,5 +196,5 @@ when isMainModule:
         writeIR("  unreachable", splitFile(filename).name & ".ll")
     
     writeIR("}", splitFile(filename).name & ".ll")
-    
+
     runLLVMIR(filename, args)
