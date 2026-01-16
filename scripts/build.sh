@@ -46,6 +46,10 @@ if [ -f "../src/test.zip" ]; then
     rm "../src/test.zip"
 fi
 
+if [ -f "../src/test.bat" ]; then
+    rm "../src/test.bat"
+fi
+
 # Return to the original directory
 cd "$startDir" || exit 1
 

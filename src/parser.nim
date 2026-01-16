@@ -155,7 +155,7 @@ proc parseCommandCall(p: var Parser): Node =
 proc parse*(p: var Parser): Node =
     return p.parseCommandCall()
 
-proc generateIR*(node: Node, commandsCalled: var seq[string], commandNum: int, vars: var Table[string, (string, string, int)]): (
+proc generateIR*(node: Node, commandsCalled: var seq[string], commandNum: int, vars: var Table[string, (string, string, int)], batchMode: bool): (
         string, seq[string], int, Table[string, (string, string, int)]) =
     ## Generates IR code from the parsed command AST
     ## Updated to use 3-tuple: (llvmType, value, stringLength)
@@ -165,7 +165,7 @@ proc generateIR*(node: Node, commandsCalled: var seq[string], commandNum: int, v
             for arg in node.args:
                 argStrings.add(arg.value)
             return reg.irGenerators[node.commandName](argStrings,
-                    commandsCalled, commandNum, vars)
+                    commandsCalled, commandNum, vars, batchMode)
         else:
             echo "Unknown command: ", node.commandName
             return ("", commandsCalled, commandNum, vars)
