@@ -28,42 +28,62 @@ proc countLinesInFile(filePath: string): int =
         return -1
     return lineCount
 
-proc cleanup(filename: string, args: seq[string]) =
-    let irFile = splitFile(absolutePath(filename)).name & ".ll"
-    let exeFile = splitFile(absolutePath(filename)).name & ".exe"
-    
-    if fileExists(irFile):
-        try:
-            removeFile(irFile)
-        except OSError:
-            echo "[!] Error removing IR file: ", cast[ptr OSError](
-                    getCurrentException()).msg
-    
-    if fileExists(exeFile):
-        if "-zip" notin args:
-            try:
-                moveFile(exeFile, joinPath(splitFile(filename).dir, exeFile))
-            except OSError:
-                echo "[!] Error moving executable file: ", cast[ptr OSError](
-                        getCurrentException()).msg
-        else:
-            let zipFile = splitFile(absolutePath(filename)).name & ".zip"
-            try:
-                removeFile(exeFile)
-                moveFile(zipFile, joinPath(splitFile(filename).dir, zipFile))
-            except OSError:
-                echo "[!] Error removing executable file: ", cast[ptr OSError](
-                        getCurrentException()).msg
+proc moveOutputFile(filename: string, target: string) =
+    var filePath = ""
 
-proc runLLVMIR(filename: string, args: seq[string]) =
+    case target
+    of "exe":
+        filePath = when defined(windows):
+            absolutePath(splitFile(filename).name & ".exe")
+        else:
+            absolutePath(splitFile(filename).name)
+        
+        try:
+            removeFile(absolutePath(splitFile(filename).name & ".ll"))
+        except OSError:
+            echo "[!] Could not remove intermediate IR file."
+            
+    of "zip":
+        filePath = splitFile(filename).name & ".zip"
+
+        try:
+            removeFile(absolutePath(splitFile(filename).name & ".ll"))
+        except OSError:
+            echo "[!] Could not remove intermediate IR file."
+
+        let exePath =
+            when defined(windows):
+                absolutePath(splitFile(filename).name & ".exe")
+            else:
+                absolutePath(splitFile(filename).name)
+
+        try:
+            removeFile(exePath)
+        except OSError:
+            echo "[!] Could not remove intermediate EXE file."
+
+    of "ir":
+        filePath = splitFile(filename).name & ".ll"
+    of "batch":
+        filePath = splitFile(filename).name & ".bat"
+    else:
+        return
+
+    try:
+        let dest = joinPath(splitFile(filename).dir, extractFilename(filePath))
+        os.moveFile(filePath, dest)
+    except OSError as e:
+        echo "[!] Error moving ", target, " file: ", e.msg
+
+proc runLLVMIR(filename: string, args: seq[string], target: string) =
     let irFile = splitFile(filename).name & ".ll"
     
-    if "-batch" notin args:
+    if target in ["exe", "ir", "zip"]:
         if not fileExists(irFile):
             echo "[!] IR file not found: ", irFile
             return
     
-    if not (("-ir" in args) or ("-batch" in args)):
+    if target in ["exe", "zip"]:
         let outName = when defined(windows):
                 absolutePath(splitFile(filename).name & ".exe")
             else:
@@ -83,7 +103,7 @@ proc runLLVMIR(filename: string, args: seq[string]) =
             if result.strip() != "":
                 echo "[*] Clang Output: ", result
             
-            if "-zip" in args:
+            if target == "zip":
                 let rel = relativePath(outName, getCurrentDir())
                 let zipCmd = when defined(windows):
                         "tar.exe -a -c -f " & splitFile(filename).name & ".zip " & rel
@@ -99,21 +119,7 @@ proc runLLVMIR(filename: string, args: seq[string]) =
             echo "Exception message: ", e.msg
             return
         
-        cleanup(filename, args)
-    
-    elif "-ir" in args:
-        try:
-            moveFile(irFile, joinPath(splitFile(filename).dir, irFile))
-        except OSError as e:
-            echo "[!] Error moving IR file: ", e.msg
-    
-    elif "-batch" in args:
-        let batchFile = splitFile(filename).name & ".bat"
-        
-        try:
-            moveFile(batchFile, joinPath(splitFile(filename).dir, batchFile))
-        except OSError as e:
-            echo "[!] Error moving Batch file: ", e.msg
+    moveOutputFile(filename, target)
 
 when isMainModule:
     let args = commandLineParams()
@@ -148,12 +154,21 @@ when isMainModule:
     var funcCalls = newSeq[string]()
     var vars = initTable[string, (string, string, int)]()
 
-    let batchMode = "-batch" in args
+    var target = "exe"
 
-    if "-batch" notin args:
+    for arg in args:
+        if arg.startsWith("-target="):
+            target = arg["-target=".len .. ^1]
+
+    if target notin ["exe", "ir", "zip", "batch"]:
+        echo "[!] Invalid target specified: ", target
+        quit(1)
+        
+    if (target == "exe") or (target == "ir") or (target == "zip"):
         writeIR("; LLVM IR generated by Quill Compiler",
                 splitFile(filename).name & ".ll")
-    else:
+    
+    elif target == "batch":
         when defined(windows):
             writeIR("@echo off\nREM Batch file generated by Quill Compiler\n",
                     splitFile(filename).name & ".bat")
@@ -167,13 +182,13 @@ when isMainModule:
         var parser = initParser(line)
         let ast = parser.parse()
         let (irCode, newCommandsCalled, newCommandNum, newVars) = generateIR(
-                ast, commandsCalled, commandNum, vars, batchMode)
+                ast, commandsCalled, commandNum, vars, target)
         
         commandsCalled = newCommandsCalled
         commandNum = newCommandNum
         vars = newVars
         
-        if "-batch" notin args:
+        if target != "batch":
             if irCode != "":
                 writeIR(irCode, splitFile(filename).name & ".ll")
                 
@@ -184,7 +199,7 @@ when isMainModule:
             if irCode != "":
                 writeIR(irCode, splitFile(filename).name & ".bat")
 
-    if "-batch" notin args:
+    if target in ["exe", "ir", "zip"]:
         # Now write the _start function (custom entry point)
         writeIR("", splitFile(filename).name & ".ll")
         writeIR("define i32 @_start() {", splitFile(filename).name & ".ll")
@@ -221,4 +236,4 @@ when isMainModule:
         
         writeIR("}", splitFile(filename).name & ".ll")
 
-    runLLVMIR(filename, args)
+    runLLVMIR(filename, args, target)

@@ -5,13 +5,13 @@ proc printIRGenerator(
     commandsCalled: var seq[string],
     commandNum: int,
     vars: var Table[string, (string, string, int)],
-    batchMode: bool
+    target: string
 ): (string, seq[string], int, Table[string, (string, string, int)]) =
 
     if args.len == 0:
         return ("", commandsCalled, commandNum, vars)
-    
-    if not batchMode:
+
+    if target in ["exe", "ir", "zip"]:
         var globalStringRef = ""
         var byteCount = 0
         var needsNewGlobal = true

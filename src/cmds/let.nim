@@ -3,7 +3,7 @@ import strutils
 
 var globalStringCounter = 0
 
-proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], commandNum: int, vars: var Table[string, (string, string, int)], batchMode: bool): (
+proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], commandNum: int, vars: var Table[string, (string, string, int)], target: string): (
     string, seq[string], int, Table[string, (string, string, int)]) =
     ## Generates IR for let statement: let x: i32 = 4
     ## args[0] = variable name (x)
@@ -28,7 +28,7 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
     # Add to commands called to prevent redefinition (do this in both modes)
     commandsCalled.add(varName)
 
-    if not batchMode:
+    if target in ["exe", "ir", "zip"]:
         # Map language types to LLVM types
         var llvmType = case varType
             of "string": "ptr"
