@@ -1,5 +1,5 @@
 import std/os
-import irWriter
+import fileWriter
 import tables
 
 proc llvmPre*(filename: string) =

@@ -1,5 +1,5 @@
 import std/os
-import irWriter
+import fileWriter
 
 proc batchPre*(filename: string) =
     when defined(windows):

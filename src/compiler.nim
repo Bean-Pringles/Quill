@@ -5,7 +5,7 @@ import system
 import tables
 import parser
 import cmds/commands
-import irWriter
+import fileWriter
 
 # Targets
 import targets/llvm
