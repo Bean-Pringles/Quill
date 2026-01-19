@@ -6,13 +6,11 @@ use std::thread;
 
 // ========== CUSTOMIZE THESE ==========
 const CHECKLIST_ITEMS: &[&str] = &[
-    "Install dependencies",
-    "Setup database",
-    "Configure environment",
-    "Initialize git hooks",
+    "Install Dependiencies",
+    "Register File Types (Requires Admin)",
+    "Create launcher and update PATH",
 ];
-
-const PYTHON_SCRIPT_PATH: &str = "../setup.py";
+const PYTHON_SCRIPT_PATH: &str = "../../../setup.py";
 const CUSTOM_ARGS: &[&str] = &[];
 // =====================================
 

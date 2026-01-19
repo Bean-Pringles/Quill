@@ -26,7 +26,7 @@ To setup this project you must move to and compile the 'setup/setupWizard' folde
 cargo build
 ```
 
- This will create an executable in (place filename here). Move this program back to the 'setup/setupWizard' folder and run it as an administrator. Select the checkboxs for the items you want to happen. (EX. Custom File Type, Launcher, CLI Command)
+ This will create an executable in setup/setupWizard/target/debug/setup.exe. Run this program as an administrator (DO NOT MOVE IT). Select the checkboxs for the items you want to happen. (EX. Custom File Type, Launcher, CLI Command)
 
 ## Compiling the Compiler
 
