@@ -10,6 +10,7 @@ import fileWriter
 # Targets
 import targets/llvm
 import targets/batch
+import targets/rust
 
 # Initialize commands BEFORE processing any files
 initCommands()
@@ -75,6 +76,8 @@ proc moveOutputFile(filename: string, target: string) =
         filePath = splitFile(filename).name & ".ll"
     of "batch":
         filePath = splitFile(filename).name & ".bat"
+    of "rust":
+        filePath = splitFile(filename).name & ".rs"
     else:
         return
     
@@ -182,7 +185,7 @@ when isMainModule:
             target = arg["-target=".len .. ^1]
 
     # Make sure its a valid target
-    if target notin ["exe", "ir", "zip", "batch"]:
+    if target notin ["exe", "ir", "zip", "batch", "rust"]:
         echo "[!] Invalid target specified: ", target
         quit(1)
         
@@ -192,7 +195,9 @@ when isMainModule:
     
     elif target == "batch":
         batchPre(filename)
-
+    
+    elif target == "rust":
+        rustPre(filename)
 
     # Main compiler loop
     for lineNumber in 0 ..< totalLines:
@@ -211,23 +216,30 @@ when isMainModule:
         commandNum = newCommandNum
         vars = newVars
         
-        if target != "batch":
-            # Makes sure code is not empty
-            if irCode != "":
+        if irCode != "":
+            if target in ["exe", "ir", "zip"]:
                 # Writes the code
                 writeCode(irCode, splitFile(filename).name & ".ll")
-                
+                    
                 # If this is a print command, store the call for later
                 if irCode.contains("define i32 @print"):
                     funcCalls.add("  call i32 @print" & $(commandNum - 1) & "()")
-        else:
-            if irCode != "":
+            
+            elif target == "batch":
                 # Writes batch code
                 writeCode(irCode, splitFile(filename).name & ".bat")
+            
+            elif target == "rust":
+                # Writes rust code
+                writeCode(irCode, splitFile(filename).name & ".rs")
 
     if target in ["exe", "ir", "zip"]:
         # Runs the ending clause for LLVM targets
         llvmPost(filename, vars, funcCalls)
+    
+    elif target == "rust":
+        # Runs the ending clause for rust targets
+        rustPost(filename)
 
     # Compiles the LLVM
     runLLVMIR(filename, args, target)

@@ -130,7 +130,7 @@ proc printIRGenerator(
 
         return (irString, commandsCalled, commandNum + 1, vars)
 
-    else:
+    elif target == "batch":
         # In batch mode, just generate echo command
         var printStatement = args[0]  # Default to the argument itself
         
@@ -145,10 +145,6 @@ proc printIRGenerator(
 
             printStatement = varValue
         else:
-            # Show what's actually in the vars table
-
-            for key, val in vars.pairs:
-                echo "  - '", key, "' = ", val
             # Remove quotes if it's a string literal
             if printStatement.len > 0 and (printStatement[0] == '"' or printStatement[0] == '\''):
                 printStatement = printStatement[1 .. ^1]
@@ -157,3 +153,29 @@ proc printIRGenerator(
         
         var batchCommand = "echo " & printStatement
         return (batchCommand, commandsCalled, commandNum, vars)
+
+    elif target == "rust":
+        # In rust mode, just generate echo command
+        var printStatement = args[0]  # Default to the argument itself
+        
+        # Strip parentheses if present
+        if printStatement.len > 0 and printStatement[0] == '(':
+            printStatement = printStatement[1 .. ^1]
+        if printStatement.len > 0 and printStatement[^1] == ')':
+            printStatement = printStatement[0 .. ^2]
+        
+        var rustCommand: string
+
+        if printStatement in vars:
+            # It's a variable — print it directly without quotes
+            rustCommand = "println!(\"{}\", " & printStatement & ");"
+        else:
+            # It's a literal — remove surrounding quotes if present
+            if printStatement.len > 0 and (printStatement[0] == '"' or printStatement[0] == '\''):
+                printStatement = printStatement[1 .. ^1]
+            if printStatement.len > 0 and (printStatement[^1] == '"' or printStatement[^1] == '\''):
+                printStatement = printStatement[0 .. ^2]
+            
+            rustCommand = "println!(" & printStatement & ");"
+
+        return (rustCommand, commandsCalled, commandNum, vars)

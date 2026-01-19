@@ -4,6 +4,12 @@ import fileWriter
 proc batchPre*(filename: string) =
     let file = splitFile(filename).name & ".bat"
     
+    if fileExists(file):
+        try:
+            removeFile(file)
+        except OSError as e:
+            echo "Error deleting file: ", e.msg
+    
     when defined(windows):
         writeCode("@echo off\n", file)
         # Adds Comment to show Auto Generated

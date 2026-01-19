@@ -50,6 +50,10 @@ if [ -f "../src/test.bat" ]; then
     rm "../src/test.bat"
 fi
 
+if [ -f "../src/test.rs" ]; then
+    rm "../src/test.rs"
+fi
+
 # Return to the original directory
 cd "$startDir" || exit 1
 

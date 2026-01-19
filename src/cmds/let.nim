@@ -62,7 +62,7 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
         else:
             # For non-string types, store directly (strLen = 0 for non-strings)
             vars[varName] = (llvmType, value, 0)
-    else:
+    elif target == "batch":
         # Batch mode: store with original type names
         if varType == "string":
             if value.len > 0 and (value[0] == '"' or value[0] == '\''):
@@ -75,6 +75,32 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
             strLen = 0
         
         vars[varName] = (varType, value, strLen)
+
+    elif target == "rust":
+        # Rust mode: store with original type names
+        let rustVal = value
+        var rustType = case varType
+            of "string": "String"
+            of "i32": "i32"
+            of "i64": "i64"
+            of "f32": "f32"
+            of "f64": "f64"
+            of "bool": "bool"
+            else: varType  # Pass through unknown types
+
+        if varType == "string":
+            if value.len > 0 and (value[0] == '"' or value[0] == '\''):
+                value = value[1 .. ^1]
+            if value.len > 0 and (value[^1] == '"' or value[^1] == '\''):
+                value = value[0 .. ^2]
+            
+            strLen = value.len
+        else:
+            strLen = 0
+        
+        vars[varName] = (varType, value, strLen)
+
+        irCode = "let mut " & varName & ": " & rustType & " = " & rustVal & ".to_string();"
 
     # Return IR code (global string constants) or empty string for other types
     return (irCode, commandsCalled, commandNum, vars)
