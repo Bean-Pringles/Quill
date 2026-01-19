@@ -1,4 +1,6 @@
-proc writeIR*(irCode: string, filename: string) =
+# Centrallized File Writes
+
+proc writeCode*(irCode: string, filename: string) =
     try:
         # Open file in append mode
         let f = open(filename, fmAppend)

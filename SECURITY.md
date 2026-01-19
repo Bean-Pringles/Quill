@@ -14,4 +14,5 @@ If you find a vulnerability:
 3. Add **steps to reproduce** it so I can test it myself.
 4. If possible, explain the potential impact or suggest a fix.
 
-I can’t guarantee a quick response, but I’ll do my best to check it out.
+Again, I don't focus on it being real secure.
+I also can’t guarantee a quick response, but I’ll do my best to check it out.

@@ -14,27 +14,23 @@
   <h1></h1>
 </div>
 
+## Why Use Quill
+
+Quill is an extremely lightweight programming langauge with a compiler written in Nim. While a standard C "Hello, World!" is roughly ~170KB, the standard Quill "Hello, World!" is just 4KB, and when zipped, just 750 Bytes. That's over 40 times smaller! Quill also highly cross platform, compiling to langauges such as LLVM IR, Batch, and Web Assembly. That makes Quill and indeal pick for microcrontrollers lacking in space. While Quill is still in Alpha versions, it is extremley well built with a modular command system and extreme optimizations. You can read more at https://beanpringles.dev/quill.
+
 ## Setup
 
-To set up this project, make sure Python and the Python library **Pillow** are installed. Then, from the setup directory, run:
+To setup this project you must move to and compile the 'setup/setupWizard' folder using the command:
 
-### Windows
-
-```shell
-python setup.py
+```Shell
+cargo build
 ```
 
-### macOS / Linux
-
-```shell
-python3 setup.py
-```
-
-Please make sure you run this command with **elevated privileges** so that it can register the file type and file icon.
+ This will create an executable in (place filename here). Move this program back to the 'setup/setupWizard' folder and run it as an administrator. Select the checkboxs for the items you want to happen. (EX. Custom File Type, Launcher, CLI Command)
 
 ## Compiling the Compiler
 
-To compile, run the following commands in the `scripts` directory:
+To compile, run the following commands in the scripts directory:
 
 ### Windows
 
@@ -55,7 +51,7 @@ This executes the built in build script that generates the commands.nim and comp
 nim r build.nim
 ```
 
-This creates `commands.nim` with all of the commands loaded from the `command` directory. For example, if the directory contains `print.nim`, `add.nim`, and `subtract.nim`, then `commands.nim` will look like this:
+This creates commands.nim with all of the commands loaded from the command directory. For example, if the directory contains print.nim, add.nim, and subtract.nim, then commands.nim will look like this:
 
 ```nim
 include "add.nim"
@@ -69,12 +65,14 @@ Then, to compile the compiler, run:
 nim c -d:release compiler.nim
 ```
 
-This assembles all of the files and outputs a single executable (`compiler.exe` on Windows, or the appropriate binary for your OS).
+This assembles all of the files and outputs a single executable (compiler.exe on Windows, or the appropriate binary for your OS).
 
-If you are like me and copy-paste code from the internet that doesn’t follow the 4-space indentation used here, you can always run:
+## Making Your Own Changes
+
+If you are like me and copy-paste code from the internet that doesn’t follow the 4-space indentation pattern used here, you can always run:
 
 ```shell
-nimpretty --indent=4 ./<filename>
+nimpretty --indent=4 ./foo.nim
 ```
 
-This makes the spacing consistent across the entire file.
+This makes the spacing consistent across the entire file, although it is not 100% accuarate and sometimes you must touch it up yourself.
