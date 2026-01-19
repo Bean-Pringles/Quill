@@ -78,7 +78,7 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
 
     elif target == "rust":
         # Rust mode: store with original type names
-        let rustVal = value
+        var rustVal = value
         var rustType = case varType
             of "string": "String"
             of "i32": "i32"
@@ -95,12 +95,39 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
                 value = value[0 .. ^2]
             
             strLen = value.len
+
+            rustVal = rustVal & ".to_string()"
         else:
             strLen = 0
         
         vars[varName] = (varType, value, strLen)
 
-        irCode = "let mut " & varName & ": " & rustType & " = " & rustVal & ".to_string();"
+        irCode = "let mut " & varName & ": " & rustType & " = " & rustVal & ";"
+
+    elif target == "python":
+        # Python mode: store with original type names
+        var pythonVal = value
+        var pythonType = case varType
+        of "string": "str"
+        of "i32", "i64": "int"
+        of "f32", "f64": "float"
+        of "bool": "bool"
+        else: varType  # Pass through unknown types
+
+        if varType == "string":
+            if value.len > 0 and (value[0] == '"' or value[0] == '\''):
+                value = value[1 .. ^1]
+            if value.len > 0 and (value[^1] == '"' or value[^1] == '\''):
+                value = value[0 .. ^2]
+            
+            strLen = value.len
+
+        else:
+            strLen = 0
+        
+        vars[varName] = (varType, value, strLen)
+
+        irCode = varName & ": " & pythonType & " = " & pythonVal
 
     # Return IR code (global string constants) or empty string for other types
     return (irCode, commandsCalled, commandNum, vars)

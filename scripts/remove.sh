@@ -31,6 +31,10 @@ if [ -f "../src/test.rs" ]; then
     rm "../src/test.rs"
 fi
 
+if [ -f "../src/test.py" ]; then
+    rm "../src/test.py"
+fi
+
 # Return to the original directory
 cd "$startDir" || exit 1
 

@@ -35,6 +35,7 @@ IF EXIST ..\src\test.ll DEL ..\src\test.ll
 IF EXIST ..\src\test.zip DEL ..\src\test.zip
 IF EXIST ..\src\test.bat DEL ..\src\test.bat
 IF EXIST ..\src\test.rs DEL ..\src\test.rs
+IF EXIST ..\src\test.py DEL ..\src\test.py
 
 REM Return to original directory
 cd /d %startDir%

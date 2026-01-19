@@ -11,6 +11,7 @@ import fileWriter
 import targets/llvm
 import targets/batch
 import targets/rust
+import targets/python
 
 # Initialize commands BEFORE processing any files
 initCommands()
@@ -78,6 +79,8 @@ proc moveOutputFile(filename: string, target: string) =
         filePath = splitFile(filename).name & ".bat"
     of "rust":
         filePath = splitFile(filename).name & ".rs"
+    of "python":
+        filePath = splitFile(filename).name & ".py"
     else:
         return
     
@@ -185,7 +188,7 @@ when isMainModule:
             target = arg["-target=".len .. ^1]
 
     # Make sure its a valid target
-    if target notin ["exe", "ir", "zip", "batch", "rust"]:
+    if target notin ["exe", "ir", "zip", "batch", "rust", "python"]:
         echo "[!] Invalid target specified: ", target
         quit(1)
         
@@ -198,11 +201,14 @@ when isMainModule:
     
     elif target == "rust":
         rustPre(filename)
+    
+    elif target == "python":
+        pythonPre(filename)
 
     # Main compiler loop
     for lineNumber in 0 ..< totalLines:
         # Gets line
-        let line = readNthLineLargeFile(filename, lineNumber)
+        let line = readNthLineLargeFile(filename, lineNumber)     
         # Makes parser object
         var parser = initParser(line)
         # Gets ast
@@ -232,6 +238,10 @@ when isMainModule:
             elif target == "rust":
                 # Writes rust code
                 writeCode(irCode, splitFile(filename).name & ".rs")
+            
+            elif target == "python":
+                # Writes python code
+                writeCode(irCode, splitFile(filename).name & ".py")
 
     if target in ["exe", "ir", "zip"]:
         # Runs the ending clause for LLVM targets

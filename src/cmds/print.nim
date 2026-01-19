@@ -155,7 +155,6 @@ proc printIRGenerator(
         return (batchCommand, commandsCalled, commandNum, vars)
 
     elif target == "rust":
-        # In rust mode, just generate echo command
         var printStatement = args[0]  # Default to the argument itself
         
         # Strip parentheses if present
@@ -167,15 +166,38 @@ proc printIRGenerator(
         var rustCommand: string
 
         if printStatement in vars:
-            # It's a variable — print it directly without quotes
+            # It's a variable — print it directly
             rustCommand = "println!(\"{}\", " & printStatement & ");"
         else:
-            # It's a literal — remove surrounding quotes if present
+            # It's a literal — wrap it in quotes
+            # Remove existing surrounding quotes first
             if printStatement.len > 0 and (printStatement[0] == '"' or printStatement[0] == '\''):
                 printStatement = printStatement[1 .. ^1]
             if printStatement.len > 0 and (printStatement[^1] == '"' or printStatement[^1] == '\''):
                 printStatement = printStatement[0 .. ^2]
-            
-            rustCommand = "println!(" & printStatement & ");"
+
+            # Now wrap in quotes for Rust
+            rustCommand = "println!(\"" & printStatement & "\");"
 
         return (rustCommand, commandsCalled, commandNum, vars)
+
+
+    elif target == "python":
+        var printStatement = args[0]  # Default to the argument itself
+        var pythonCommand: string
+        
+        # Strip outer parentheses
+        if printStatement.len >= 2 and printStatement[0] == '(' and printStatement[^1] == ')':
+            printStatement = printStatement[1 .. ^2]
+
+        # If not a variable, treat as literal
+        if not (printStatement in vars):
+            # Strip matching quotes
+            if printStatement.len >= 2 and ((printStatement[0] == '"' and printStatement[^1] == '"') or
+                                            (printStatement[0] == '\'' and printStatement[^1] == '\'')):
+                printStatement = printStatement[1 .. ^2]
+            pythonCommand = "print(\"" & printStatement & "\")"
+        else:
+            pythonCommand = "print(" & printStatement & ")"
+
+        return (pythonCommand, commandsCalled, commandNum, vars)
