@@ -177,8 +177,8 @@ when isMainModule:
     var commandsCalled = newSeq[string]()
     var commandNum = 0
     var funcCalls = newSeq[string]()
-    var vars = initTable[string, (string, string, int)]()
-
+    # Var Name : (LLVM Type, Value, String Length, isConst)
+    var vars = initTable[string, (string, string, int, bool)]()
     var target = "exe"
 
     # Gets the target

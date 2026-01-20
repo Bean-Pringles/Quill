@@ -14,6 +14,8 @@ var includeContent = """# Auto-generated - do not edit manually
 
 import system
 import ../registry
+import tables
+import strutils
 
 """
 

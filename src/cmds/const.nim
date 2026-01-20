@@ -1,13 +1,15 @@
-proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], commandNum: int, vars: var Table[string, (string, string, int, bool)], target: string): (
+var globalStringCounter = 0
+
+proc constIRGenerator*(args: seq[string], commandsCalled: var seq[string], commandNum: int, vars: var Table[string, (string, string, int, bool)], target: string): (
     string, seq[string], int, Table[string, (string, string, int, bool)]) =
-    ## Generates IR for let statement: let x: i32 = 4
+    ## Generates IR for const statement: const x: i32 = 4
     ## args[0] = variable name (x)
     ## args[1] = type (i32)
     ## args[2] = value (4)
-    ## vars now stores: (llvmType, value, stringLength) - stringLength only used for strings
+    ## vars now stores: (llvmType, value, stringLength, isConst) - stringLength only used for strings
 
     if args.len < 3:
-        echo "Error: let command requires at least 3 arguments (name, type, value)"
+        echo "Error: const command requires at least 3 arguments (name, type, value)"
         return ("", commandsCalled, commandNum, vars)
     
     let varName = args[0]
@@ -51,13 +53,13 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
             
             # Generate global constant declaration
             irCode = "@" & globalName & " = private constant [" & $strLen & " x i8] c\"" & value & "\\0A\\00\"\n"
-            
-            # Store: global constant name, LLVM type, string length
+
+            # Store: global constant name, LLVM type, string length, isConst
             vars[varName] = (llvmType, "@" & globalName, strLen, true)
         else:
             # For non-string types, store directly (strLen = 0 for non-strings)
             vars[varName] = (llvmType, value, 0, true)
-
+    
     elif target == "batch":
         # Batch mode: store with original type names
         if varType == "string":
@@ -98,7 +100,7 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
         
         vars[varName] = (varType, value, strLen, true)
 
-        irCode = "let mut " & varName & ": " & rustType & " = " & rustVal & ";"
+        irCode = "let " & varName & ": " & rustType & " = " & rustVal & ";"
 
     elif target == "python":
         # Python mode: store with original type names

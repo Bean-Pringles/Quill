@@ -66,8 +66,8 @@ proc parseArgument(p: var Parser): Node =
 
     return Node(isCall: false, value: "")
 
-proc parseLetStatement(p: var Parser): Node =
-    ## Parses: let x: i32 = 4 OR let x: string = "Hello"
+proc parseLetStatement(p: var Parser, commandName: string): Node =
+    ## Parses: let/const/var x: i32 = 4 OR let/const/var x: string = "Hello"
     p.skipWhitespace()
     
     # Parse variable name
@@ -105,10 +105,10 @@ proc parseLetStatement(p: var Parser): Node =
             value.add(p.currentChar)
             p.advance()
     
-    # Create a let command node with args: [varName, varType, value]
+    # Create a command node with the actual command name (let/const/var)
     result = Node(
         isCall: true,
-        commandName: "let",
+        commandName: commandName,  # Use the passed command name instead of hardcoding "let"
         args: @[
             Node(isCall: false, value: varName),
             Node(isCall: false, value: varType),
@@ -122,9 +122,9 @@ proc parseCommandCall(p: var Parser): Node =
     let commandName = p.parseIdentifier()
     p.skipWhitespace()
     
-    # Special handling for "let" statement
-    if commandName == "let":
-        return p.parseLetStatement()
+    # Special handling for "let", "const", and "var" statements
+    if commandName in ["let", "const", "var"]:
+        return p.parseLetStatement(commandName)
 
     if p.currentChar != '(':
         return Node(isCall: false, value: commandName)
@@ -155,10 +155,10 @@ proc parseCommandCall(p: var Parser): Node =
 proc parse*(p: var Parser): Node =
     return p.parseCommandCall()
 
-proc generateIR*(node: Node, commandsCalled: var seq[string], commandNum: int, vars: var Table[string, (string, string, int)], target: string): (
-        string, seq[string], int, Table[string, (string, string, int)]) =
+proc generateIR*(node: Node, commandsCalled: var seq[string], commandNum: int, vars: var Table[string, (string, string, int, bool)], target: string): (
+        string, seq[string], int, Table[string, (string, string, int, bool)]) =
     ## Generates IR code from the parsed command AST
-    ## Updated to use 3-tuple: (llvmType, value, stringLength)
+    ## Updated to use 4-tuple: (llvmType, value, stringLength, isConst)
     if node.isCall:
         if reg.irGenerators.hasKey(node.commandName):
             var argStrings: seq[string] = @[]

@@ -4,9 +4,9 @@ proc printIRGenerator(
     args: seq[string],
     commandsCalled: var seq[string],
     commandNum: int,
-    vars: var Table[string, (string, string, int)],
+    vars: var Table[string, (string, string, int, bool)],
     target: string
-): (string, seq[string], int, Table[string, (string, string, int)]) =
+): (string, seq[string], int, Table[string, (string, string, int, bool)]) =
 
     if args.len == 0:
         return ("", commandsCalled, commandNum, vars)
@@ -18,7 +18,7 @@ proc printIRGenerator(
         
         # Check if argument is a variable
         if args[0] in vars:
-            let (varType, varValue, strLength) = vars[args[0]]
+            let (varType, varValue, strLength, _) = vars[args[0]]
             
             # If it's a string variable, use the existing global constant
             if varType == "ptr" and varValue.startsWith("@.str"):
@@ -141,7 +141,7 @@ proc printIRGenerator(
             printStatement = printStatement[0 .. ^2]
         
         if printStatement in vars:
-            let (varType, varValue, strLength) = vars[printStatement]
+            let (varType, varValue, strLength, _) = vars[printStatement]
 
             printStatement = varValue
         else:
