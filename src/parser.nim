@@ -116,15 +116,51 @@ proc parseLetStatement(p: var Parser, commandName: string): Node =
         ]
     )
 
+proc parseAssignment(p: var Parser, varName: string): Node =
+    ## Parses: varname = value
+    p.skipWhitespace()
+    
+    # Expect '='
+    if p.currentChar != '=':
+        echo "Expected '=' in assignment"
+        return Node(isCall: false, value: "")
+    p.advance()
+    p.skipWhitespace()
+    
+    # Parse value
+    var value = ""
+    if p.currentChar in {'"', '\''}:
+        let quoteChar = p.currentChar
+        let stringContent = p.parseString()
+        value = quoteChar & stringContent & quoteChar
+    else:
+        # Parse numeric or identifier value
+        while p.currentChar != '\0' and not (p.currentChar in Whitespace):
+            value.add(p.currentChar)
+            p.advance()
+    
+    result = Node(
+        isCall: true,
+        commandName: "assign",
+        args: @[
+            Node(isCall: false, value: varName),
+            Node(isCall: false, value: value)
+        ]
+    )
+
 proc parseCommandCall(p: var Parser): Node =
     p.skipWhitespace()
 
     let commandName = p.parseIdentifier()
     p.skipWhitespace()
-    
-    # Special handling for "let", "const", and "var" statements
-    if commandName in ["let", "const", "var"]:
+
+    # Special handling for "let", "const", statements
+    if commandName in ["let", "const"]:
         return p.parseLetStatement(commandName)
+    
+    # Check if it's an assignment (varname = value)
+    if p.currentChar == '=':
+        return p.parseAssignment(commandName)
 
     if p.currentChar != '(':
         return Node(isCall: false, value: commandName)
@@ -156,9 +192,9 @@ proc parse*(p: var Parser): Node =
     return p.parseCommandCall()
 
 proc generateIR*(node: Node, commandsCalled: var seq[string], commandNum: int, vars: var Table[string, (string, string, int, bool)], target: string): (
-        string, seq[string], int, Table[string, (string, string, int, bool)]) =
-    ## Generates IR code from the parsed command AST
-    ## Updated to use 4-tuple: (llvmType, value, stringLength, isConst)
+        string, string, string, seq[string], int, Table[string, (string, string, int, bool)]) =
+    # Returns: (globalDecl, functionDef, entryCode, commandsCalled, commandNum, vars)
+    # Generates IR code from the parsed command AST
     if node.isCall:
         if reg.irGenerators.hasKey(node.commandName):
             var argStrings: seq[string] = @[]
@@ -168,6 +204,6 @@ proc generateIR*(node: Node, commandsCalled: var seq[string], commandNum: int, v
                     commandsCalled, commandNum, vars, target)
         else:
             echo "Unknown command: ", node.commandName
-            return ("", commandsCalled, commandNum, vars)
+            return ("", "", "", commandsCalled, commandNum, vars)
     else:
-        return ("", commandsCalled, commandNum, vars)
+        return ("", "", "", commandsCalled, commandNum, vars)

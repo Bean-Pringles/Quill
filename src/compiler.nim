@@ -176,10 +176,13 @@ when isMainModule:
     # Init Vars
     var commandsCalled = newSeq[string]()
     var commandNum = 0
-    var funcCalls = newSeq[string]()
     # Var Name : (LLVM Type, Value, String Length, isConst)
     var vars = initTable[string, (string, string, int, bool)]()
     var target = "exe"
+    
+    var entryCode: seq[string] = @[]
+    var globalDecls: seq[string] = @[]
+    var functionDefs: seq[string] = @[]
 
     # Gets the target
     # Finds wehre the target is
@@ -204,48 +207,50 @@ when isMainModule:
     
     elif target == "python":
         pythonPre(filename)
-
+    
     # Main compiler loop
     for lineNumber in 0 ..< totalLines:
-        # Gets line
         let line = readNthLineLargeFile(filename, lineNumber)     
-        # Makes parser object
         var parser = initParser(line)
-        # Gets ast
         let ast = parser.parse()
-        # Passes the arguements of the command for processing
-        let (irCode, newCommandsCalled, newCommandNum, newVars) = generateIR(
+        
+        # Now returns 3 separate code sections
+        let (globalDecl, functionDef, otherCode, newCommandsCalled, newCommandNum, newVars) = generateIR(
                 ast, commandsCalled, commandNum, vars, target)
         
-        # Gets any changes and assigns them to the variables
         commandsCalled = newCommandsCalled
         commandNum = newCommandNum
         vars = newVars
         
-        if irCode != "":
-            if target in ["exe", "ir", "zip"]:
-                # Writes the code
-                writeCode(irCode, splitFile(filename).name & ".ll")
-                    
-                # If this is a print command, store the call for later
-                if irCode.contains("define i32 @print"):
-                    funcCalls.add("  call i32 @print" & $(commandNum - 1) & "()")
-            
-            elif target == "batch":
-                # Writes batch code
-                writeCode(irCode, splitFile(filename).name & ".bat")
-            
-            elif target == "rust":
-                # Writes rust code
-                writeCode(irCode, splitFile(filename).name & ".rs")
-            
-            elif target == "python":
-                # Writes python code
-                writeCode(irCode, splitFile(filename).name & ".py")
+        if target in ["exe", "ir", "zip"]:
+            # Add to appropriate lists
+            if globalDecl != "":
+                globalDecls.add(globalDecl)
+            if functionDef != "":
+                functionDefs.add(functionDef)
+                # Auto-add print call to entry
+                if functionDef.contains("define i32 @print"):
+                    let printNum = commandNum - 1
+                    entryCode.add("  call i32 @print" & $printNum & "()")
+            if otherCode != "":
+                # This is entry code (like assignments)
+                entryCode.add(otherCode)
+        
+        elif target == "batch":
+            if otherCode != "":
+                writeCode(otherCode, splitFile(filename).name & ".bat")
+        
+        elif target == "rust":
+            if otherCode != "":
+                writeCode(otherCode, splitFile(filename).name & ".rs")
+        
+        elif target == "python":
+            if otherCode != "":
+                writeCode(otherCode, splitFile(filename).name & ".py")
 
     if target in ["exe", "ir", "zip"]:
         # Runs the ending clause for LLVM targets
-        llvmPost(filename, vars, funcCalls)
+        llvmPost(filename, vars, entryCode, globalDecls, functionDefs)
     
     elif target == "rust":
         # Runs the ending clause for rust targets

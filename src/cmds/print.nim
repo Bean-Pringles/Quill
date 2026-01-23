@@ -6,15 +6,18 @@ proc printIRGenerator(
     commandNum: int,
     vars: var Table[string, (string, string, int, bool)],
     target: string
-): (string, seq[string], int, Table[string, (string, string, int, bool)]) =
+): (string, string, string, seq[string], int, Table[string, (string, string, int, bool)]) =
+    # Returns: (globalDecl, functionDef, entryCode, commandsCalled, commandNum, vars)
 
     if args.len == 0:
-        return ("", commandsCalled, commandNum, vars)
+        return ("", "", "", commandsCalled, commandNum, vars)
 
     if target in ["exe", "ir", "zip"]:
         var globalStringRef = ""
         var byteCount = 0
         var needsNewGlobal = true
+        var globalDecl = ""
+        var functionDef = ""
         
         # Check if argument is a variable
         if args[0] in vars:
@@ -27,55 +30,16 @@ proc printIRGenerator(
                 needsNewGlobal = false
             else:
                 # For non-string types, we need to convert to string
-                # This is a limitation - LLVM IR printing of integers requires more complex code
-                # For now, treat the value as a string to print
                 var strValue = varValue
                 byteCount = strValue.len + 2
                 globalStringRef = "@.strPrint" & $printGlobalCounter
                 inc printGlobalCounter
                 
-                var irString = globalStringRef & " = private constant [" & $byteCount & " x i8] c\"" & strValue & "\\0A\\00\"\n\n"
+                # Create global string constant
+                globalDecl = globalStringRef & " = private constant [" & $byteCount & " x i8] c\"" & strValue & "\\0A\\00\""
                 needsNewGlobal = false
-                
-                # Generate print function
-                irString &= "define i32 @print" & $commandNum & "() {\n"
-                irString &= "entry:\n"
-                irString &= "    %str_ptr = getelementptr inbounds [" & $byteCount & " x i8], ptr " & globalStringRef & ", i32 0, i32 0\n"
-
-                when defined(linux):
-                    irString &= "    %result = call i64 @write(i32 1, ptr %str_ptr, i64 " & $byteCount & ")\n"
-                    irString &= "    ret i32 0\n"
-                    irString &= "}\n"
-                    
-                    if "print" notin commandsCalled:
-                        commandsCalled.add("print")
-                        irString = "declare i64 @write(i32, ptr, i64)\n\n" & irString
-                
-                elif defined(windows):
-                    irString &= "    %stdout = call ptr @GetStdHandle(i32 -11)\n"
-                    irString &= "    %bytes_written = alloca i32, align 4\n"
-                    irString &= "    %result = call i32 @WriteFile(ptr %stdout, ptr %str_ptr, i32 " & $byteCount & ", ptr %bytes_written, ptr null)\n"
-                    irString &= "    ret i32 0\n"
-                    irString &= "}\n"
-                    
-                    if "print" notin commandsCalled:
-                        commandsCalled.add("print")
-                        irString = "declare ptr @GetStdHandle(i32)\ndeclare i32 @WriteFile(ptr, ptr, i32, ptr, ptr)\n\n" & irString
-                
-                else:
-                    irString &= "    %result = call i64 @write(i32 1, ptr %str_ptr, i64 " & $byteCount & ")\n"
-                    irString &= "    ret i32 0\n"
-                    irString &= "}\n"
-                    
-                    if "print" notin commandsCalled:
-                        commandsCalled.add("print")
-                        irString = "declare i64 @write(i32, ptr, i64)\n\n" & irString
-
-                return (irString, commandsCalled, commandNum + 1, vars)
         
         # Create new global string constant if needed (for literal strings)
-        var irString = ""
-        
         if needsNewGlobal:
             # Remove quotes if present
             var strValue = args[0]
@@ -88,53 +52,61 @@ proc printIRGenerator(
             globalStringRef = "@.strPrint" & $printGlobalCounter
             inc printGlobalCounter
             
-            irString = globalStringRef & " = private constant [" & $byteCount & " x i8] c\"" & strValue & "\\0A\\00\"\n\n"
+            globalDecl = globalStringRef & " = private constant [" & $byteCount & " x i8] c\"" & strValue & "\\0A\\00\""
         
         # Generate print function
-        irString &= "define i32 @print" & $commandNum & "() {\n"
-        irString &= "entry:\n"
-        irString &= "    %str_ptr = getelementptr inbounds [" & $byteCount & " x i8], ptr " & globalStringRef & ", i32 0, i32 0\n"
+        functionDef = "define i32 @print" & $commandNum & "() {\n"
+        functionDef &= "entry:\n"
+        functionDef &= "    %str_ptr = getelementptr inbounds [" & $byteCount & " x i8], ptr " & globalStringRef & ", i32 0, i32 0\n"
 
         # Platform-specific syscall
         when defined(linux):
-            irString &= "    %result = call i64 @write(i32 1, ptr %str_ptr, i64 " & $byteCount & ")\n"
-            irString &= "    ret i32 0\n"
-            irString &= "}\n"
+            functionDef &= "    %result = call i64 @write(i32 1, ptr %str_ptr, i64 " & $byteCount & ")\n"
+            functionDef &= "    ret i32 0\n"
+            functionDef &= "}"
             
             # Only declare write syscall once
             if "print" notin commandsCalled:
                 commandsCalled.add("print")
-                irString = "declare i64 @write(i32, ptr, i64)\n\n" & irString
+                if globalDecl != "":
+                    globalDecl = "declare i64 @write(i32, ptr, i64)\n" & globalDecl
+                else:
+                    globalDecl = "declare i64 @write(i32, ptr, i64)"
         
         elif defined(windows):
-            irString &= "    %stdout = call ptr @GetStdHandle(i32 -11)\n"
-            irString &= "    %bytes_written = alloca i32, align 4\n"
-            irString &= "    %result = call i32 @WriteFile(ptr %stdout, ptr %str_ptr, i32 " & $byteCount & ", ptr %bytes_written, ptr null)\n"
-            irString &= "    ret i32 0\n"
-            irString &= "}\n"
+            functionDef &= "    %stdout = call ptr @GetStdHandle(i32 -11)\n"
+            functionDef &= "    %bytes_written = alloca i32, align 4\n"
+            functionDef &= "    %result = call i32 @WriteFile(ptr %stdout, ptr %str_ptr, i32 " & $byteCount & ", ptr %bytes_written, ptr null)\n"
+            functionDef &= "    ret i32 0\n"
+            functionDef &= "}"
             
             # Only declare Windows API functions once
             if "print" notin commandsCalled:
                 commandsCalled.add("print")
-                irString = "declare ptr @GetStdHandle(i32)\ndeclare i32 @WriteFile(ptr, ptr, i32, ptr, ptr)\n\n" & irString
+                if globalDecl != "":
+                    globalDecl = "declare ptr @GetStdHandle(i32)\ndeclare i32 @WriteFile(ptr, ptr, i32, ptr, ptr)\n" & globalDecl
+                else:
+                    globalDecl = "declare ptr @GetStdHandle(i32)\ndeclare i32 @WriteFile(ptr, ptr, i32, ptr, ptr)"
         
         else:
             # Fallback to write syscall for other Unix-like systems
-            irString &= "    %result = call i64 @write(i32 1, ptr %str_ptr, i64 " & $byteCount & ")\n"
-            irString &= "    ret i32 0\n"
-            irString &= "}\n"
+            functionDef &= "    %result = call i64 @write(i32 1, ptr %str_ptr, i64 " & $byteCount & ")\n"
+            functionDef &= "    ret i32 0\n"
+            functionDef &= "}"
             
             if "print" notin commandsCalled:
                 commandsCalled.add("print")
-                irString = "declare i64 @write(i32, ptr, i64)\n\n" & irString
+                if globalDecl != "":
+                    globalDecl = "declare i64 @write(i32, ptr, i64)\n" & globalDecl
+                else:
+                    globalDecl = "declare i64 @write(i32, ptr, i64)"
 
-        return (irString, commandsCalled, commandNum + 1, vars)
+        return (globalDecl, functionDef, "", commandsCalled, commandNum + 1, vars)
 
     elif target == "batch":
         # In batch mode, just generate echo command
-        var printStatement = args[0]  # Default to the argument itself
+        var printStatement = args[0]
         
-        # Strip parentheses if present
         if printStatement.len > 0 and printStatement[0] == '(':
             printStatement = printStatement[1 .. ^1]
         if printStatement.len > 0 and printStatement[^1] == ')':
@@ -142,22 +114,19 @@ proc printIRGenerator(
         
         if printStatement in vars:
             let (varType, varValue, strLength, _) = vars[printStatement]
-
             printStatement = varValue
         else:
-            # Remove quotes if it's a string literal
             if printStatement.len > 0 and (printStatement[0] == '"' or printStatement[0] == '\''):
                 printStatement = printStatement[1 .. ^1]
             if printStatement.len > 0 and (printStatement[^1] == '"' or printStatement[^1] == '\''):
                 printStatement = printStatement[0 .. ^2]
         
         var batchCommand = "echo " & printStatement
-        return (batchCommand, commandsCalled, commandNum, vars)
+        return ("", "", batchCommand, commandsCalled, commandNum, vars)
 
     elif target == "rust":
-        var printStatement = args[0]  # Default to the argument itself
+        var printStatement = args[0]
         
-        # Strip parentheses if present
         if printStatement.len > 0 and printStatement[0] == '(':
             printStatement = printStatement[1 .. ^1]
         if printStatement.len > 0 and printStatement[^1] == ')':
@@ -166,33 +135,24 @@ proc printIRGenerator(
         var rustCommand: string
 
         if printStatement in vars:
-            # It's a variable — print it directly
             rustCommand = "println!(\"{}\", " & printStatement & ");"
         else:
-            # It's a literal — wrap it in quotes
-            # Remove existing surrounding quotes first
             if printStatement.len > 0 and (printStatement[0] == '"' or printStatement[0] == '\''):
                 printStatement = printStatement[1 .. ^1]
             if printStatement.len > 0 and (printStatement[^1] == '"' or printStatement[^1] == '\''):
                 printStatement = printStatement[0 .. ^2]
-
-            # Now wrap in quotes for Rust
             rustCommand = "println!(\"" & printStatement & "\");"
 
-        return (rustCommand, commandsCalled, commandNum, vars)
-
+        return ("", "", rustCommand, commandsCalled, commandNum, vars)
 
     elif target == "python":
-        var printStatement = args[0]  # Default to the argument itself
+        var printStatement = args[0]
         var pythonCommand: string
         
-        # Strip outer parentheses
         if printStatement.len >= 2 and printStatement[0] == '(' and printStatement[^1] == ')':
             printStatement = printStatement[1 .. ^2]
 
-        # If not a variable, treat as literal
         if not (printStatement in vars):
-            # Strip matching quotes
             if printStatement.len >= 2 and ((printStatement[0] == '"' and printStatement[^1] == '"') or
                                             (printStatement[0] == '\'' and printStatement[^1] == '\'')):
                 printStatement = printStatement[1 .. ^2]
@@ -200,4 +160,4 @@ proc printIRGenerator(
         else:
             pythonCommand = "print(" & printStatement & ")"
 
-        return (pythonCommand, commandsCalled, commandNum, vars)
+        return ("", "", pythonCommand, commandsCalled, commandNum, vars)
