@@ -1,0 +1,71 @@
+{
+  "name": "Quill Standard",
+  "type": "dark",
+  "colors": {
+    "editor.background": "#1e1e1e",
+    "editor.foreground": "#d4d4d4"
+  },
+  "tokenColors": [
+    {
+      "scope": "comment.line.number-sign.quill",
+      "settings": {
+        "foreground": "#6A9955",  // green for comments
+        "fontStyle": "italic"
+      }
+    },
+    {
+      "scope": "keyword.control.quill",
+      "settings": {
+        "foreground": "#C586C0"  // purple for keywords
+      }
+    },
+    {
+      "scope": ["storage.type.quill", "entity.name.type.quill"],
+      "settings": {
+        "foreground": "#DCDCAA"  // yellow for types/classes
+      }
+    },
+    {
+      "scope": "constant.numeric.quill",
+      "settings": {
+        "foreground": "#FFA500"  // orange for numbers
+      }
+    },
+    {
+      "scope": "string.quoted.double.quill",
+      "settings": {
+        "foreground": "#4FC1FF"  // cyan for strings
+      }
+    },
+    {
+      "scope": "constant.character.escape.quill",
+      "settings": {
+        "foreground": "#D7BA7D"  // light orange for escape sequences
+      }
+    },
+    {
+      "scope": "entity.name.function.quill",
+      "settings": {
+        "foreground": "#9CDCFE"  // light blue for function names
+      }
+    },
+    {
+      "scope": "variable.other.quill",
+      "settings": {
+        "foreground": "#9CDCFE"  // light blue for variables
+      }
+    },
+    {
+      "scope": ["punctuation.separator.quill", "punctuation.section.quill"],
+      "settings": {
+        "foreground": "#808080"  // gray for punctuation
+      }
+    },
+    {
+      "scope": "keyword.operator.quill",
+      "settings": {
+        "foreground": "#D4D4D4"  // white/gray for operators
+      }
+    }
+  ]
+}

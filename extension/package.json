@@ -1,0 +1,36 @@
+{
+  "name": "quill-language",
+  "displayName": "Quill Programming Language",
+  "description": "Syntax highlighting and support for the Quill programming language",
+  "version": "0.1.0",
+  "readme": "README.md",
+  "publisher": "BeanPringles",
+  "engines": { "vscode": "^1.80.0" },
+  "repository": "https://github.com/Bean-Pringles/Quill",
+  "categories": ["Languages"],
+  "icon": "images/quillLogo.png",
+  "contributes": {
+    "languages": [
+      {
+        "id": "quill",
+        "aliases": ["Quill", "quill"],
+        "extensions": [".qil"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "quill",
+        "scopeName": "source.quill",
+        "path": "./syntaxes/quill.tmLanguage.json"
+      }
+    ],
+    "themes": [
+      {
+        "label": "Quill Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/quill-color-theme.json"
+      }
+    ]
+  }
+}

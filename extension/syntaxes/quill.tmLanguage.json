@@ -1,0 +1,49 @@
+{
+  "scopeName": "source.quill",
+  "name": "Quill",
+  "patterns": [
+    {
+      "name": "comment.line.number-sign.quill",
+      "match": "#.*$"
+    },
+    {
+      "name": "keyword.control.quill",
+      "match": "\\b(print|let)\\b"
+    },
+    {
+      "name": "storage.type.quill",
+      "match": "\\b(i32|i64|f32|f64|bool|string)\\b"
+    },
+    {
+      "name": "constant.numeric.quill",
+      "match": "\\b[0-9]+\\b"
+    },
+    {
+      "name": "string.quoted.double.quill",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.quill",
+          "match": "\\\\."
+        }
+      ]
+    },
+    {
+      "name": "entity.name.function.quill",
+      "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*(?=\\()"
+    },
+    {
+      "name": "variable.other.quill",
+      "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+    },
+    {
+      "name": "punctuation.separator.key-value.quill",
+      "match": ":"
+    },
+    {
+      "name": "keyword.operator.quill",
+      "match": "==|!=|&&|\\|\\||[+\\-*/%=!<>]"
+    }
+  ]
+}
