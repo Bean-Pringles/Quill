@@ -1,0 +1,7 @@
+let a: string = "Hello, World!"
+let b: i32 = 1
+let c: i64 = 2
+
+print(a)
+print(b)
+print(c)

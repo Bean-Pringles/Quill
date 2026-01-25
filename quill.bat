@@ -1,3 +1,2 @@
 @echo off
-REM Default Path for Windows to the compiler
-"%~dp0src\compiler.exe" %*
+"%~dp0build\compiler\windows\quill-compiler-windows-x86_64.exe" %*
