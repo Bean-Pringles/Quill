@@ -1,7 +1,5 @@
 @echo off
 REM Nim Build & Compile Script
-REM Clear the screen for readability
-cls
 
 REM Save the starting directory
 SET startDir=%CD%

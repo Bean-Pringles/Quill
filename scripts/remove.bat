@@ -1,6 +1,5 @@
 @echo off
 REM Remove Old Compiled Files
-cls
 
 SET startDir=%CD%
 cd /d %~dp0

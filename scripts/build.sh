@@ -1,7 +1,5 @@
 #!/bin/bash
 # Nim Build & Compile Script for Linux/macOS
-# Clears the screen for readability
-clear
 
 # Save the starting directory
 startDir=$(pwd)

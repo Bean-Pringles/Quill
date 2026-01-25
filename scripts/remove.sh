@@ -1,8 +1,6 @@
 #!/bin/bash
 # Remove Old Compiled Files
 
-clear
-
 # Save the starting directory
 startDir=$(pwd)
 
