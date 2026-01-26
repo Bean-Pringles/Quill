@@ -20,6 +20,10 @@ move ..\src\compiler.exe ..\build\compiler\windows\
 rem Rename compiler
 ren ..\build\compiler\windows\compiler.exe quill-compiler-windows-x86_64.exe
 
+rem Optimize it
+echo [*] Optimizing File
+upx --best --lzma ..\build\compiler\windows\quill-compiler-windows-x86_64.exe
+
 rem Sign and verify the program
 gpg --detach-sign ..\build\compiler\windows\quill-compiler-windows-x86_64.exe
 gpg --verify ..\build\compiler\windows\quill-compiler-windows-x86_64.exe.sig ..\build\compiler\windows\quill-compiler-windows-x86_64.exe

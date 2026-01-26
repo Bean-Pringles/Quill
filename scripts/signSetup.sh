@@ -19,6 +19,9 @@ fi
 # Rename file
 mv ../build/setup/linux/setup ../build/setup/linux/quill-setup-linux-x86_64
 
+x86_64-w64-mingw32-strip ../build/setup/linux/quill-setup-linux-x86_64
+upx --best --lzma ../build/setup/linux/quill-setup-linux-x86_64
+
 # Sign and verify the program
 gpg --detach-sign ../build/setup/linux/quill-setup-linux-x86_64
 gpg --verify ../build/setup/linux/quill-setup-linux-x86_64.sig ../build/setup/linux/quill-setup-linux-x86_64

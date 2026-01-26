@@ -20,7 +20,7 @@ REM Delete old compiler.exe if it exists
 IF EXIST ..\src\compiler.exe DEL ..\src\compiler.exe
 
 REM Compile in release mode and exit if it fails
-nim c -d:release ..\src\compiler.nim
+nim c -d:release --opt:size -d:danger -d:strip --passL:-s ..\src\compiler.nim
 IF ERRORLEVEL 1 (
     echo [ERROR] compiler.nim compilation failed. Aborting.
     exit /b 1

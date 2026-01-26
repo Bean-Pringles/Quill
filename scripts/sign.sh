@@ -6,19 +6,19 @@ cd "$(dirname "$0")" || { echo "[ERROR] Failed to cd to script directory."; exit
 
 # Checks if compiler exists
 if [ ! -f "../src/compiler" ]; then
-    echo "[!] compiler doesn't exist"
+    echo "[!] Compiler doesn't exist"
     exit
 fi
 
 # Deletes old files
 echo "[*] Deleting Old Files"
 
-if [ -f "../build/compiler/linux/compiler" ]; then
-    rm "../build/compiler/linux/compiler"
+if [ -f "../build/compiler/linux/quill-compiler-linux-x86_64" ]; then
+    rm "../build/compiler/linux/quill-compiler-linux-x86_64"
 fi
 
-if [ -f "../build/compiler/linux/compiler.sig" ]; then
-    rm "../build/compiler/linux/compiler.sig"
+if [ -f "../build/compiler/linux/quill-compiler-linux-x86_64.sig" ]; then
+    rm "../build/compiler/linux/quill-compiler-linux-x86_64.sig"
 fi
 
 # Moves the compiler file
@@ -27,6 +27,9 @@ mv ../src/compiler ../build/compiler/linux/
 
 # Renames compiler
 mv ../build/compiler/linux/compiler ../build/compiler/linux/quill-compiler-linux-x86_64
+
+x86_64-w64-mingw32-strip ../build/compiler/linux/quill-compiler-linux-x86_64
+upx --best --lzma ../build/compiler/linux/quill-compiler-linux-x86_64
 
 # Sign and verify the program
 gpg --detach-sign ../build/compiler/linux/quill-compiler-linux-x86_64

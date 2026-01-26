@@ -24,7 +24,7 @@ if [ -f "../src/compiler" ]; then
 fi
 
 # Compile in release mode and exit if it fails
-nim c -d:release ../src/compiler.nim
+nim c -d:release --opt:size -d:danger -d:strip --passL:-s ../src/compiler.nim
 if [ $? -ne 0 ]; then
     echo "[ERROR] compiler.nim compilation failed. Aborting."
     exit 1

@@ -111,16 +111,27 @@ proc runLLVMIR(filename: string, args: seq[string], target: string) =
             let cmd = when defined(windows):
                     "clang " & irFile & " -O3 -Os -flto -fuse-ld=lld -Wno-override-module -ffunction-sections -fdata-sections -Wl,/SUBSYSTEM:CONSOLE,/DEBUG:NONE,/OPT:REF,/OPT:ICF,/ENTRY:_start -lkernel32 -o " & outName
                 else:
-                    "clang " & irFile & " -o " & outName & " -O3 -Os -Wno-override-module -flto -fuse-ld=lld -ffunction-sections -fdata-sections -Wl,--gc-sections -s -nostartfiles -e _start"
+                    "clang-16 -x ir " & irFile & " -O3 -Os -flto -fuse-ld=lld-16 -ffunction-sections -fdata-sections -Wl,--gc-sections -s -nostartfiles -e _start -o " & outName
             
             let result = execProcess(
                 cmd,
                 options = {poUsePath, poEvalCommand, poStdErrToStdOut}
             )
-            
+
             if result.strip() != "":
                 echo "[*] Clang Output: ", result
             
+            # Optimize using strip and upx
+            let _ = execProcess(
+                "strip " & outName,
+                options = {poUsePath, poEvalCommand, poStdErrToStdOut}
+            )
+
+            let _ = execProcess(
+                "upx --best --lzma " & outName,
+                options = {poUsePath, poEvalCommand, poStdErrToStdOut}
+            )
+
             # Zips the file using tar on Windows and zip on MacOS/Linux
             if target == "zip":
                 let rel = relativePath(outName, getCurrentDir())

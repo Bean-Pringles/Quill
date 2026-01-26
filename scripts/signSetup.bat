@@ -15,6 +15,9 @@ rem Deletes old files
 echo [*] Deleting Old Signatures
 if exist ..\build\setup\windows\quill-setup-windows-x86_64.exe.sig del ..\build\setup\windows\quill-setup-windows-x86_64.exe.sig
 
+strip ..\build\setup\windows\quill-setup-windows-x86_64.exe
+upx --best --lzma ..\build\setup\windows\quill-setup-windows-x86_64.exe
+
 rem Sign and verify the program
 gpg --detach-sign ..\build\setup\windows\quill-setup-windows-x86_64.exe
 gpg --verify ..\build\setup\windows\quill-setup-windows-x86_64.exe.sig ..\build\setup\windows\quill-setup-windows-x86_64.exe
