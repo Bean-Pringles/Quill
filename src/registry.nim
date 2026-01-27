@@ -6,7 +6,8 @@ type
         commandsCalled: var seq[string],
         commandNum: int,
         vars: var Table[string, (string, string, int, bool)],
-        target: string
+        target: string, 
+        lineNumber: int
     ): (string, string, string, seq[string], int, Table[string, (string, string, int, bool)])
 var irGenerators* = initTable[string, IRGenerator]()
 

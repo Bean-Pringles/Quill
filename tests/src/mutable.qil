@@ -1,8 +1,0 @@
-let a: i32 = 1
-const b: i32 = 2
-
-a = 1
-b = 2
-
-print(a)
-print(b)

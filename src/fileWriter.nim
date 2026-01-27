@@ -8,5 +8,7 @@ proc writeCode*(irCode: string, filename: string) =
         f.close()
     except OSError as e:
         echo "[!] Error writing IR for line: ", irCode, " | OS Error: ", e.msg
+        quit(1)
     except Exception as e:
         echo "[!] Unexpected error writing IR for line: ", irCode, " | Exception: ", e.msg
+        quit(1)

@@ -1,10 +1,10 @@
-proc constIRGenerator*(args: seq[string], commandsCalled: var seq[string], commandNum: int, vars: var Table[string, (string, string, int, bool)], target: string): (
+proc constIRGenerator*(args: seq[string], commandsCalled: var seq[string], commandNum: int, vars: var Table[string, (string, string, int, bool)], target: string, lineNumber: int): (
     string, string, string, seq[string], int, Table[string, (string, string, int, bool)]) =
     # Returns: (globalDecl, functionDef, entryCode, commandsCalled, commandNum, vars)
 
     if args.len < 3:
-        echo "[!] Error: const command requires at least 3 arguments (name, type, value)"
-        return ("", "", "", commandsCalled, commandNum, vars)
+        echo "[!] Error on line " & $lineNumber & ": up const command requires at least 3 arguments (name, type, value)"
+        quit(1)
     
     let varName = args[0]
     let varType = args[1]
@@ -13,8 +13,8 @@ proc constIRGenerator*(args: seq[string], commandsCalled: var seq[string], comma
     var strLen = 0
 
     if varName in commandsCalled:
-        echo "[!] Error: Variable '" & varName & "' is being redefined."
-        return ("", "", "", commandsCalled, commandNum, vars)
+        echo "[!] Error on line " & $lineNumber & ": up Variable '" & varName & "' is being redefined."
+        quit(1)
 
     # Add to commands called to prevent redefinition
     commandsCalled.add(varName)

@@ -8,7 +8,7 @@
     },
     {
       "name": "keyword.control.quill",
-      "match": "\\b(print|let)\\b"
+      "match": "\\b(print|let|const)\\b"
     },
     {
       "name": "storage.type.quill",

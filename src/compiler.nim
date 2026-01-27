@@ -33,7 +33,7 @@ proc countLinesInFile(filePath: string): int =
             inc lineCount
     except OSError:
         echo "[!] Could not open or read file: ", filePath
-        return -1
+        quit(1)
     return lineCount
 
 # Moves the file back to the same dir as the src file
@@ -52,6 +52,7 @@ proc moveOutputFile(filename: string, target: string) =
             removeFile(absolutePath(splitFile(filename).name & ".ll"))
         except OSError:
             echo "[!] Could not remove intermediate IR file."
+            quit(1)
             
     of "zip":
         filePath = splitFile(filename).name & ".zip"
@@ -61,6 +62,7 @@ proc moveOutputFile(filename: string, target: string) =
             removeFile(absolutePath(splitFile(filename).name & ".ll"))
         except OSError:
             echo "[!] Could not remove intermediate IR file."
+            quit(1)
 
         let exePath =
             when defined(windows):
@@ -72,6 +74,7 @@ proc moveOutputFile(filename: string, target: string) =
             removeFile(exePath)
         except OSError:
             echo "[!] Could not remove intermediate EXE file."
+            quit(1)
 
     of "ir":
         filePath = splitFile(filename).name & ".ll"
@@ -90,6 +93,7 @@ proc moveOutputFile(filename: string, target: string) =
         os.moveFile(filePath, dest)
     except OSError as e:
         echo "[!] Error moving ", target, " file: ", e.msg
+        quit(1)
 
 # Runs LLVM on the src IR file with all optimizatons
 proc runLLVMIR(filename: string, args: seq[string], target: string) =
@@ -98,7 +102,7 @@ proc runLLVMIR(filename: string, args: seq[string], target: string) =
     if target in ["exe", "ir", "zip"]:
         if not fileExists(irFile):
             echo "[!] IR file not found: ", irFile
-            return
+            quit(1)
     
     if target in ["exe", "zip"]:
         let outName = when defined(windows):
@@ -148,7 +152,7 @@ proc runLLVMIR(filename: string, args: seq[string], target: string) =
         except OSError as e:
             echo "[!] Error running clang. Make sure clang is installed and in PATH."
             echo "Exception message: ", e.msg
-            return
+            quit(1)
     
     # Calls the file mover
     moveOutputFile(filename, target)
@@ -227,7 +231,7 @@ when isMainModule:
         
         # Now returns 3 separate code sections
         let (globalDecl, functionDef, otherCode, newCommandsCalled, newCommandNum, newVars) = generateIR(
-                ast, commandsCalled, commandNum, vars, target)
+                ast, commandsCalled, commandNum, vars, target, lineNumber + 1)
         
         commandsCalled = newCommandsCalled
         commandNum = newCommandNum

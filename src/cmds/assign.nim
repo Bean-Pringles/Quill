@@ -5,13 +5,14 @@ proc assignIRGenerator*(
     commandsCalled: var seq[string],
     commandNum: int,
     vars: var Table[string, (string, string, int, bool)],
-    target: string
+    target: string,
+    lineNumber: int
 ): (string, string, string, seq[string], int, Table[string, (string, string, int, bool)]) =
     # Returns: (globalDecl, functionDef, entryCode, commandsCalled, commandNum, vars)
 
     if args.len < 2:
-        echo "[!] Error: assign command requires at least 2 arguments"
-        return ("", "", "", commandsCalled, commandNum, vars)
+        echo "[!] Error on line " & $lineNumber & ": up assign command requires at least 2 arguments"
+        quit(1)
 
     let varName = args[0]
     var value = args[1]
@@ -20,14 +21,14 @@ proc assignIRGenerator*(
 
     if target in ["exe", "ir", "zip"]:
         if not (varName in vars):
-            echo "[!] Error: Variable '" & varName & "' is not defined."
-            return ("", "", "", commandsCalled, commandNum, vars)
+            echo "[!] Error on line " & $lineNumber & ": up Variable '" & varName & "' is not defined."
+            quit(1)
 
         let (llvmType, _, strLen, isConst) = vars[varName]
 
         if isConst:
-            echo "[!] Error: Cannot assign to constant variable '" & varName & "'."
-            return ("", "", "", commandsCalled, commandNum, vars)
+            echo "[!] Error on line " & $lineNumber & ": up Cannot assign to constant variable '" & varName & "'."
+            quit(1)
 
         # Handle string assignment - need to create a new global constant
         if llvmType == "ptr":
@@ -75,14 +76,14 @@ proc assignIRGenerator*(
     elif target == "batch":
         # Batch assignment
         if not (varName in vars):
-            echo "[!] Error: Variable '" & varName & "' is not defined."
-            return ("", "", "", commandsCalled, commandNum, vars)
+            echo "[!] Error on line " & $lineNumber & ": up Variable '" & varName & "' is not defined."
+            quit(1)
         
         let (varType, _, strLen, isConst) = vars[varName]
         
         if isConst:
-            echo "[!] Error: Cannot assign to constant variable '" & varName & "'."
-            return ("", "", "", commandsCalled, commandNum, vars)
+            echo "[!] Error on line " & $lineNumber & ": up Cannot assign to constant variable '" & varName & "'."
+            quit(1)
         
         var batchValue = value
         if varType == "string":
@@ -97,14 +98,14 @@ proc assignIRGenerator*(
     
     elif target == "rust":
         if not (varName in vars):
-            echo "[!] Error: Variable '" & varName & "' is not defined."
-            return ("", "", "", commandsCalled, commandNum, vars)
+            echo "[!] Error on line " & $lineNumber & ": up Variable '" & varName & "' is not defined."
+            quit(1)
         
         let (varType, _, strLen, isConst) = vars[varName]
         
         if isConst:
-            echo "[!] Error: Cannot assign to constant variable '" & varName & "'."
-            return ("", "", "", commandsCalled, commandNum, vars)
+            echo "[!] Error on line " & $lineNumber & ": up Cannot assign to constant variable '" & varName & "'."
+            quit(1)
         
         var rustValue = value
         if varType == "string":
@@ -120,14 +121,14 @@ proc assignIRGenerator*(
     
     elif target == "python":
         if not (varName in vars):
-            echo "[!] Error: Variable '" & varName & "' is not defined."
-            return ("", "", "", commandsCalled, commandNum, vars)
+            echo "[!] Error on line " & $lineNumber & ": up Variable '" & varName & "' is not defined."
+            quit(1)
         
         let (varType, _, strLen, isConst) = vars[varName]
         
         if isConst:
-            echo "[!] Error: Cannot assign to constant variable '" & varName & "'."
-            return ("", "", "", commandsCalled, commandNum, vars)
+            echo "[!] Error on line " & $lineNumber & ": up Cannot assign to constant variable '" & varName & "'."
+            quit(1)
         
         vars[varName] = (varType, value, value.len, isConst)
         let pythonCode = varName & " = " & value
