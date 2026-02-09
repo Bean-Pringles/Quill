@@ -38,7 +38,7 @@ proc countLinesInFile(filePath: string): int =
 
 # Moves the file back to the same dir as the src file
 proc moveOutputFile(filename: string, target: string) =
-    var filePath = ""
+    var filePath: string
 
     case target
     of "exe":
@@ -113,9 +113,9 @@ proc runLLVMIR(filename: string, args: seq[string], target: string) =
         try:
             # Generates the LLVM command and runs it
             let cmd = when defined(windows):
-                    "clang " & irFile & " -O3 -Os -flto -fuse-ld=lld -Wno-override-module -ffunction-sections -fdata-sections -Wl,/SUBSYSTEM:CONSOLE,/DEBUG:NONE,/OPT:REF,/OPT:ICF,/ENTRY:_start -lkernel32 -o " & outName
+                    "clang " & irFile & " -Oz -flto -fuse-ld=lld -Wno-override-module -ffunction-sections -fdata-sections -Wl,/SUBSYSTEM:CONSOLE,/DEBUG:NONE,/OPT:REF,/OPT:ICF,/ENTRY:_start -lkernel32 -o " & outName
                 else:
-                    "clang-16 -x ir " & irFile & " -O3 -Os -flto -fuse-ld=lld-16 -ffunction-sections -fdata-sections -Wl,--gc-sections -s -nostartfiles -e _start -o " & outName
+                    "clang-16 -x ir " & irFile & " -Oz -flto -fuse-ld=lld-16 -ffunction-sections -fdata-sections -Wl,--gc-sections -s -nostartfiles -e _start -o " & outName
             
             let result = execProcess(
                 cmd,
@@ -198,6 +198,7 @@ when isMainModule:
     var entryCode: seq[string] = @[]
     var globalDecls: seq[string] = @[]
     var functionDefs: seq[string] = @[]
+    var cmdVal: seq[string] = @[]
 
     # Gets the target
     # Finds wehre the target is
@@ -230,8 +231,8 @@ when isMainModule:
         let ast = parser.parse()
         
         # Now returns 3 separate code sections
-        let (globalDecl, functionDef, otherCode, newCommandsCalled, newCommandNum, newVars) = generateIR(
-                ast, commandsCalled, commandNum, vars, target, lineNumber + 1)
+        let (globalDecl, functionDef, otherCode, newCommandsCalled, newCommandNum, newVars, _) = generateIR(
+                ast, commandsCalled, commandNum, vars, cmdVal, target, lineNumber + 1)
         
         commandsCalled = newCommandsCalled
         commandNum = newCommandNum
@@ -256,8 +257,10 @@ when isMainModule:
                 writeCode(otherCode, splitFile(filename).name & ".bat")
         
         elif target == "rust":
+            if functionDef != "":
+                functionDefs.add(functionDef)
             if otherCode != "":
-                writeCode(otherCode, splitFile(filename).name & ".rs")
+                entryCode.add(otherCode)
         
         elif target == "python":
             if otherCode != "":
@@ -269,7 +272,7 @@ when isMainModule:
     
     elif target == "rust":
         # Runs the ending clause for rust targets
-        rustPost(filename)
+        rustPost(filename, functionDefs, entryCode)
 
     # Compiles the LLVM
     runLLVMIR(filename, args, target)

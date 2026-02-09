@@ -36,12 +36,10 @@ proc llvmPost*(filename: string, vars: Table[string, (string, string, int, bool)
     writeCode("define i32 @_start() {", file)
     writeCode("entry:", file)
         
-    # Add variable allocations and stores from let statements
-    for varName, (varType, value, strLen, _) in vars.pairs():
+    for varName, (varType, value, strLen, isCommandResult) in vars.pairs():
         if varType == "ptr":
-            # For string variables (pointers to global constants)
+            # Only generate alloca, not store
             writeCode("  %" & varName & " = alloca ptr, align 8", file)
-            writeCode("  store ptr " & value & ", ptr %" & varName & ", align 8", file)
         else:
             # For numeric types
             let alignment = case varType
@@ -49,11 +47,16 @@ proc llvmPost*(filename: string, vars: Table[string, (string, string, int, bool)
                 of "i64", "double": "8"
                 of "i1": "1"
                 else: "4"
+            
+            writeCode("  %" & varName & " = alloca " & varType & ", align " & alignment, file)
                 
             writeCode("  %" & varName & " = alloca " & varType & ", align " & alignment, file)
-            writeCode("  store " & varType & " " & value & ", ptr %" & varName & ", align " & alignment, file)
+            
+            # Only store if it's NOT a command result
+            if not isCommandResult:
+                writeCode("  store " & varType & " " & value & ", ptr %" & varName & ", align " & alignment, file)
         
-    # Add all the entry code (assignments, function calls, etc.)
+    # Add all the entry code (assignments, function calls, input commands, etc.)
     for code in entryCode:
         writeCode(code, file)
         

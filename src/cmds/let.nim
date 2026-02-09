@@ -1,6 +1,6 @@
-proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], commandNum: int, vars: var Table[string, (string, string, int, bool)], target: string, lineNumber: int): (
-    string, string, string, seq[string], int, Table[string, (string, string, int, bool)]) =
-    # Returns: (globalDecl, functionDef, entryCode, commandsCalled, commandNum, vars)
+proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], commandNum: int, vars: var Table[string, (string, string, int, bool)], cmdVal: seq[string], target: string, lineNumber: int): (
+    string, string, string, seq[string], int, Table[string, (string, string, int, bool)], seq[string]) =
+    # Returns: (globalDecl, functionDef, entryCode, commandsCalled, commandNum, vars, cmdVal)
 
     if args.len < 3:
         echo "[!] Error on line " & $lineNumber & ": up let command requires at least 3 arguments (name, type, value)"
@@ -8,9 +8,10 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
     
     let varName = args[0]
     let varType = args[1]
-    var value = args[2 ..< args.len].join(" ")
-    var globalDecl = ""
+    var entryCode: string
+    var globalDecl: string
     var strLen = 0
+    var value = args[2 ..< args.len].join(" ")
 
     if varName in commandsCalled:
         echo "[!] Error on line " & $lineNumber & ": up Variable '" & varName & "' is being redefined."
@@ -32,42 +33,71 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
 
         # Handle string literals - create global constant
         if varType == "string":
-            # Remove quotes
-            if value.len > 0 and (value[0] == '"' or value[0] == '\''):
-                value = value[1 .. ^1]
-            if value.len > 0 and (value[^1] == '"' or value[^1] == '\''):
-                value = value[0 .. ^2]
+            # Check if this is a runtime value from cmdVal (nested input call result)
+            # cmdVal[2] corresponds to args[2] which is the value argument
+            var actualValue = value
+            if cmdVal.len > 2 and cmdVal[2] != "":
+                # This came from a nested command call (like input)
+                actualValue = cmdVal[2]
             
-            # Calculate string length (original + \n + \00)
-            strLen = value.len + 2
+            # Check if it's a runtime value (starts with %)
+            let isRuntimeValue = actualValue.len > 0 and actualValue[0] == '%'
             
-            # Create global string constant
-            let globalName = ".str" & $globalStringCounter
-            inc globalStringCounter
-            
-            # Generate global constant declaration
-            globalDecl = "@" & globalName & " = private constant [" & $strLen & " x i8] c\"" & value & "\\0A\\00\""
-            
-            # Store: global constant name, LLVM type, string length
-            vars[varName] = (llvmType, "@" & globalName, strLen, false)
+            if isRuntimeValue:
+                # Don't generate store here - let the parser handle it
+                entryCode = ""
+                vars[varName] = (llvmType, actualValue, 0, true)  # isCommandResult = true
+            else:
+                # String literal - create global constant
+                var cleanValue = actualValue
+                # Remove quotes
+                if cleanValue.len > 0 and (cleanValue[0] == '"' or cleanValue[0] == '\''):
+                    cleanValue = cleanValue[1 .. ^1]
+                if cleanValue.len > 0 and (cleanValue[^1] == '"' or cleanValue[^1] == '\''):
+                    cleanValue = cleanValue[0 .. ^2]
+                
+                strLen = cleanValue.len + 2
+                let globalName = ".str" & $globalStringCounter
+                inc globalStringCounter
+                
+                globalDecl = "@" & globalName & " = private constant [" & $strLen & " x i8] c\"" & cleanValue & "\\0A\\00\""
+                
+                # ✓ GENERATE THE STORE NOW in entryCode
+                entryCode = "  store ptr @" & globalName & ", ptr %" & varName & ", align 8"
+                
+                vars[varName] = (llvmType, "@" & globalName, strLen, false)
         else:
-            # For non-string types, store directly (strLen = 0 for non-strings)
+            # For non-string types, store directly (strLen = 0 for non-strings, isConst = false)
             vars[varName] = (llvmType, value, 0, false)
 
-        return (globalDecl, "", "", commandsCalled, commandNum, vars)
+        return (globalDecl, "", entryCode, commandsCalled, commandNum, vars, @[])
 
     elif target == "batch":
-        if varType == "string":
-            if value.len > 0 and (value[0] == '"' or value[0] == '\''):
-                value = value[1 .. ^1]
-            if value.len > 0 and (value[^1] == '"' or value[^1] == '\''):
-                value = value[0 .. ^2]
-            strLen = value.len
-        else:
-            strLen = 0
+        var batchCode: string
+        var cleanValue = value
         
-        vars[varName] = (varType, value, strLen, false)
-        return ("", "", "", commandsCalled, commandNum, vars)
+        # Check if the value is a command (like input_var0)
+        if isCommand(value, vars):
+            # It's a command result - store reference to the input variable
+            vars[varName] = (varType, value, 0, true)
+            batchCode = "set " & varName & "=!" & value & "!"
+        else:
+            # It's a literal value
+            if varType == "string":
+                if cleanValue.len > 0 and (cleanValue[0] == '"' or cleanValue[0] == '\''):
+                    cleanValue = cleanValue[1 .. ^1]
+                if cleanValue.len > 0 and (cleanValue[^1] == '"' or cleanValue[^1] == '\''):
+                    cleanValue = cleanValue[0 .. ^2]
+                strLen = cleanValue.len
+            else:
+                strLen = 0
+            
+            cleanValue = cleanValue.replace("!", "^!")
+
+            vars[varName] = (varType, cleanValue, strLen, false)
+            batchCode = "set " & varName & "=" & cleanValue
+        
+        return ("", "", batchCode, commandsCalled, commandNum, vars, @[])
 
     elif target == "rust":
         var rustVal = value
@@ -89,10 +119,11 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
             rustVal = rustVal & ".to_string()"
         else:
             strLen = 0
-
+        
+        # isConst = false for let (mutable)
         vars[varName] = (varType, value, strLen, false)
         let rustCode = "let mut " & varName & ": " & rustType & " = " & rustVal & ";"
-        return ("", "", rustCode, commandsCalled, commandNum, vars)
+        return ("", "", rustCode, commandsCalled, commandNum, vars, @[])
 
     elif target == "python":
         var pythonVal = value
@@ -112,8 +143,9 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
         else:
             strLen = 0
         
+        # isConst = false for let (mutable)
         vars[varName] = (varType, value, strLen, false)
         let pythonCode = varName & ": " & pythonType & " = " & pythonVal
-        return ("", "", pythonCode, commandsCalled, commandNum, vars)
+        return ("", "", pythonCode, commandsCalled, commandNum, vars, @[])
 
-    return ("", "", "", commandsCalled, commandNum, vars)
+    return ("", "", "", commandsCalled, commandNum, vars, @[])

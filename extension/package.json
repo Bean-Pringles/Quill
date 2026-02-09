@@ -2,7 +2,7 @@
   "name": "quill-language",
   "displayName": "Quill Programming Language",
   "description": "Syntax highlighting and support for the Quill programming language",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "readme": "README.md",
   "publisher": "BeanPringles",
   "engines": { "vscode": "^1.80.0" },
