@@ -32,10 +32,15 @@ proc inputIRGenerator*(
             if inputBufferCounter == 0:
                 globalDecl &= "@STD_INPUT_HANDLE  = constant i32 -10\n"
                 globalDecl &= "@STD_OUTPUT_HANDLE = constant i32 -11\n\n"
-                globalDecl &= "declare ptr @GetStdHandle(i32)\n\n"
-                globalDecl &= "declare i32 @WriteConsoleA(\n"
-                globalDecl &= "    ptr, ptr, i32, ptr, ptr\n"
-                globalDecl &= ")\n\n"
+                
+                if not ("declare ptr @GetStdHandle(i32)" in commandsCalled):
+                    commandsCalled.add("declare ptr @GetStdHandle(i32)")
+                    globalDecl &= "declare ptr @GetStdHandle(i32)\n\n"
+                
+                if not ("declare i32 @WriteConsoleA(ptr, ptr, i32, ptr, ptr)" in commandsCalled):
+                    commandsCalled.add("declare i32 @WriteConsoleA(ptr, ptr, i32, ptr, ptr)")
+                    globalDecl &= "declare i32 @WriteConsoleA(ptr, ptr, i32, ptr, ptr)\n\n"
+                
                 globalDecl &= "declare i32 @ReadConsoleA(\n"
                 globalDecl &= "   ptr, ptr, i32, ptr, ptr\n"
                 globalDecl &= ")\n\n"
@@ -76,14 +81,7 @@ proc inputIRGenerator*(
             entryCode &= "        ptr null\n"
             entryCode &= "    )\n"
             
-        else:
-            # Linux/Unix syscall approach (no C runtime)
-            if inputBufferCounter == 0:
-                globalDecl &= "; Linux syscalls - direct kernel interface\n"
-                globalDecl &= "; syscall numbers for x86_64:\n"
-                globalDecl &= "; read = 0, write = 1\n"
-                globalDecl &= "; File descriptors: stdin=0, stdout=1\n\n"
-            
+        else:            
             # Remove quotes from prompt
             var cleanPrompt = prompt
             if cleanPrompt.len >= 2 and (cleanPrompt[0] == '"' or cleanPrompt[0] == '\''):
@@ -100,14 +98,14 @@ proc inputIRGenerator*(
             entryCode &= "    ; Write prompt to stdout (syscall 1)\n"
             entryCode &= "    %promptPtr" & $inputBufferCounter & " = getelementptr [" & $promptLen & " x i8], ptr @inputPrompt" & $inputBufferCounter & ", i64 0, i64 0\n"
             entryCode &= "    %writeResult" & $inputBufferCounter & " = call i64 asm sideeffect \"syscall\",\n"
-            entryCode &= "        \"={rax},{rax},{rdi},{rsi},{rdx}\"\n"
+            entryCode &= "        \"={rax},{rax},{rdi},{rsi},{rdx},~{rcx},~{r11}\"\n"
             entryCode &= "        (i64 1, i64 1, ptr %promptPtr" & $inputBufferCounter & ", i64 " & $promptLen & ")\n\n"
             
             # Read from stdin using syscall and SAVE the result
             entryCode &= "    ; Read from stdin (syscall 0)\n"
             entryCode &= "    %bufPtr" & $inputBufferCounter & " = getelementptr [64 x i8], ptr " & bufferGlobal & ", i64 0, i64 0\n"
             entryCode &= "    %readResult" & $inputBufferCounter & " = call i64 asm sideeffect \"syscall\",\n"
-            entryCode &= "        \"={rax},{rax},{rdi},{rsi},{rdx}\"\n"
+            entryCode &= "        \"={rax},{rax},{rdi},{rsi},{rdx},~{rcx},~{r11}\"\n"
             entryCode &= "        (i64 0, i64 0, ptr %bufPtr" & $inputBufferCounter & ", i64 64)\n"
             # SAVE the bytes read count!
             entryCode &= "    store i64 %readResult" & $inputBufferCounter & ", ptr @" & bytesReadName & ", align 8\n\n"

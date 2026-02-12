@@ -79,8 +79,10 @@ proc assignIRGenerator*(
             entryCode = "  " & tempReg & " = load ptr, ptr %" & value & ", align 8\n"
             entryCode &= "  store ptr " & tempReg & ", ptr %" & varName & ", align 8"
             
-            # Update vars - now holds the loaded value as a runtime value
-            vars[varName] = (llvmType, tempReg, 0, true)
+            # FIXED: Preserve the original buffer reference (srcValue), not tempReg!
+            # This ensures that if srcValue is "%bufPtr6", copy also tracks "%bufPtr6"
+            # so print can find the correct @bytesRead6
+            vars[varName] = (llvmType, srcValue, srcStrLen, srcIsCommandResult)
             
             return ("", "", entryCode, commandsCalled, newCommandNum, vars, @[])
 

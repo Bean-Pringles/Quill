@@ -33,12 +33,12 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
 
         # Handle string literals - create global constant
         if varType == "string":
-            # Check if this is a runtime value from cmdVal (nested input call result)
-            # cmdVal[2] corresponds to args[2] which is the value argument
+            # FIXED: Check if this is a runtime value from cmdVal (nested input call result)
+            # cmdVal[0] contains the buffer pointer (e.g., "%bufPtr0")
             var actualValue = value
-            if cmdVal.len > 2 and cmdVal[2] != "":
+            if cmdVal.len > 0 and cmdVal[0] != "":
                 # This came from a nested command call (like input)
-                actualValue = cmdVal[2]
+                actualValue = cmdVal[0]  # FIXED: Use cmdVal[0] instead of cmdVal[2]
             
             # Check if it's a runtime value (starts with %)
             let isRuntimeValue = actualValue.len > 0 and actualValue[0] == '%'
@@ -46,6 +46,7 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
             if isRuntimeValue:
                 # Don't generate store here - let the parser handle it
                 entryCode = ""
+                # FIXED: Now actualValue is "%bufPtr0" not empty!
                 vars[varName] = (llvmType, actualValue, 0, true)  # isCommandResult = true
             else:
                 # String literal - create global constant

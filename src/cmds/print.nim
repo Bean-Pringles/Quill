@@ -26,7 +26,14 @@ proc printIRGenerator*(
         # Detect OS at compile time
         when defined(windows):
             if printGlobalCounter == 0:
-                globalDecl = "declare ptr @GetStdHandle(i32)\ndeclare i32 @WriteConsoleA(ptr, ptr, i32, ptr, ptr)\n\n"
+                if not ("declare ptr @GetStdHandle(i32)" in commandsCalled):
+                    commandsCalled.add("declare ptr @GetStdHandle(i32)")
+                    globalDecl = "declare ptr @GetStdHandle(i32)\n"
+                
+                if not ("declare i32 @WriteConsoleA(ptr, ptr, i32, ptr, ptr)" in commandsCalled):
+                    commandsCalled.add("declare i32 @WriteConsoleA(ptr, ptr, i32, ptr, ptr)")
+                    globalDecl &= "declare i32 @WriteConsoleA(ptr, ptr, i32, ptr, ptr)\n\n"
+        
         else:
             # Linux doesn't need declarations for inline syscalls
             globalDecl = ""
@@ -67,7 +74,7 @@ proc printIRGenerator*(
                     entryCode &= "  ; Write to stdout (syscall 1)\n"
                     entryCode &= "  %writeResult_print" & $printGlobalCounter &
                             " = call i64 asm sideeffect \"syscall\",\n"
-                    entryCode &= "      \"={rax},{rax},{rdi},{rsi},{rdx}\"\n"
+                    entryCode &= "      \"={rax},{rax},{rdi},{rsi},{rdx},~{rcx},~{r11}\"\n"
                     entryCode &= "      (i64 1, i64 1, ptr " & loadReg & ", i64 " & bytesReg & ")\n"
                 
                 inc printGlobalCounter
@@ -91,7 +98,7 @@ proc printIRGenerator*(
                     entryCode &= "  ; Write to stdout (syscall 1)\n"
                     entryCode &= "  %writeResult_print" & $printGlobalCounter &
                             " = call i64 asm sideeffect \"syscall\",\n"
-                    entryCode &= "      \"={rax},{rax},{rdi},{rsi},{rdx}\"\n"
+                    entryCode &= "      \"={rax},{rax},{rdi},{rsi},{rdx},~{rcx},~{r11}\"\n"
                     entryCode &= "      (i64 1, i64 1, ptr " & loadReg & ", i64 " & $strLength & ")\n"
                 
                 inc printGlobalCounter
@@ -117,7 +124,7 @@ proc printIRGenerator*(
                 else:
                     functionDef &= "  ; Write to stdout (syscall 1)\n"
                     functionDef &= "  %writeResult = call i64 asm sideeffect \"syscall\",\n"
-                    functionDef &= "      \"={rax},{rax},{rdi},{rsi},{rdx}\"\n"
+                    functionDef &= "      \"={rax},{rax},{rdi},{rsi},{rdx},~{rcx},~{r11}\"\n"
                     functionDef &= "      (i64 1, i64 1, ptr %str_ptr, i64 " & $byteCount & ")\n"
                 
                 functionDef &= "  ret i32 0\n"
@@ -158,7 +165,7 @@ proc printIRGenerator*(
                 entryCode &= "  ; Write to stdout (syscall 1)\n"
                 entryCode &= "  %writeResult_print" & $printGlobalCounter &
                         " = call i64 asm sideeffect \"syscall\",\n"
-                entryCode &= "      \"={rax},{rax},{rdi},{rsi},{rdx}\"\n"
+                entryCode &= "      \"={rax},{rax},{rdi},{rsi},{rdx},~{rcx},~{r11}\"\n"
                 entryCode &= "      (i64 1, i64 1, ptr " & bufferPtr & ", i64 " & bytesReg & ")\n"
             
             inc printGlobalCounter
@@ -197,7 +204,7 @@ proc printIRGenerator*(
         else:
             functionDef &= "  ; Write to stdout (syscall 1)\n"
             functionDef &= "  %writeResult = call i64 asm sideeffect \"syscall\",\n"
-            functionDef &= "      \"={rax},{rax},{rdi},{rsi},{rdx}\"\n"
+            functionDef &= "      \"={rax},{rax},{rdi},{rsi},{rdx},~{rcx},~{r11}\"\n"
             functionDef &= "      (i64 1, i64 1, ptr %str_ptr, i64 " & $byteCount & ")\n"
         
         functionDef &= "  ret i32 0\n"
