@@ -5,7 +5,7 @@
   <img alt="Static Badge" src="https://img.shields.io/github/stars/Bean-Pringles/Quill">
   <img alt="Static Badge" src="https://img.shields.io/badge/Language-Nim-orange">
   <img alt="Static Badge" src="https://img.shields.io/badge/OS-Windows,%20Linux,%20MacOS-green">
-  <img alt="Static Badge" src="https://img.shields.io/badge/Version-v0.1.0-purple">
+  <img alt="Static Badge" src="https://img.shields.io/badge/Version-v0.1.1-purple">
   <img alt="Static Badge" src="https://img.shields.io/badge/CPU-x86-yellow">
   <img alt="Static Badge" src="https://img.shields.io/github/downloads/Bean-Pringles/Quill/total.svg">
   <img alt="Static Badge" src="https://img.shields.io/github/repo-size/Bean-Pringles/Quill">
