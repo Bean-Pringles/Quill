@@ -53,7 +53,7 @@ let y: i32 = 4
 
 ## Setup
 
-The compiler and setup is already compiled in the ./build/compiler/<os platform> and ./build/setup/<os platform>. You can run the setup script as an administrator (If you want to register the file types) and choose the setup options you want. This will setup everything with no extra work required.
+The compiler and setup is already compiled in the ./build/compiler/<os platform> and ./build/setup/wizard/<os platform>. You can run the setup script as an administrator (If you want to register the file types) and choose the setup options you want. This will setup everything with no extra work required.
 
 ## Project Status
 
@@ -68,13 +68,16 @@ To compile, run the following commands in the scripts directory:
 
 ```shell
 ./build
+./sign
 ```
 
 ### MacOS/Linux
 
 ```shell
 chmod +x build.sh
+chmod +x sign.sh
 ./build.sh
+./sign.sh
 ```
 
 This executes the built in build script that compiles the compiler as well as generating commands.nim.
