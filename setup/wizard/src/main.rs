@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use eframe::egui;
 use std::process::{Command, Stdio};
 use std::io::{BufRead, BufReader};
@@ -6,13 +8,24 @@ use std::thread;
 
 // ========== CUSTOMIZE THESE ==========
 const CHECKLIST_ITEMS: &[&str] = &[
-    "Install Dependiencies",
+    "Install Dependencies",
     "Register File Types (Requires Admin)",
     "Create launcher and update PATH",
 ];
-const PYTHON_SCRIPT_PATH: &str = "../../../setup.py";
 const CUSTOM_ARGS: &[&str] = &[];
 // =====================================
+
+// Get the path to the setup script based on OS
+fn get_setup_script_path() -> String {
+    #[cfg(target_os = "windows")]
+    {
+        "../../script/windows/quill-setup-windows-x86_64.exe".to_string()
+    }
+    #[cfg(target_os = "linux")]
+    {
+        "../../script/linux/quill-setup-linux-x86_64".to_string()
+    }
+}
 
 #[derive(Clone)]
 enum SetupState {
@@ -204,11 +217,11 @@ impl SetupApp {
         *self.progress.lock().unwrap() = 0.0;
         *self.last_output.lock().unwrap() = String::new();
 
-        // Build args with True/False for each checkbox
+        // Build args with true/false for each checkbox
         let mut args: Vec<String> = self
             .checklist
             .iter()
-            .map(|(_, checked)| if *checked { "True" } else { "False" })
+            .map(|(_, checked)| if *checked { "true" } else { "false" })
             .map(String::from)
             .collect();
         
@@ -220,7 +233,7 @@ impl SetupApp {
         let last_output = Arc::clone(&self.last_output);
         let ctx_clone = ctx.clone();
 
-        // Spawn thread to run the Python script
+        // Spawn thread to run the Go script
         thread::spawn(move || {
             // Start progress animation
             let progress_clone = Arc::clone(&progress);
@@ -244,10 +257,11 @@ impl SetupApp {
                 }
             });
 
-            // Run the actual command with unbuffered output
-            let result = Command::new("python")
-                .arg("-u")  // Unbuffered output
-                .arg(PYTHON_SCRIPT_PATH)
+            // Get the setup script path
+            let script_path = get_setup_script_path();
+
+            // Run the actual command
+            let result = Command::new(&script_path)
                 .args(&args)
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
@@ -314,7 +328,7 @@ impl SetupApp {
                 }
                 Err(e) => {
                     *state.lock().unwrap() = SetupState::Error(
-                        format!("Failed to start: {}", e)
+                        format!("Failed to start setup script at '{}': {}", script_path, e)
                     );
                 }
             }
