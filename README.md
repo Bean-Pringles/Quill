@@ -51,7 +51,7 @@ Or to declare a mutable variable, y, with the value of 4, you would do:
 let y: i32 = 4
 ```
 
-For more information, check out https://github.com/Bean-Pringles/Quill/wiki
+For more information, check out https://github.com/Bean-Pringles/Quill/wiki and the grammar/ folder.
 
 ## Setup
 
