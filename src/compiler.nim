@@ -263,8 +263,10 @@ when isMainModule:
                 entryCode.add(otherCode)
         
         elif target == "python":
+            if functionDef != "":
+                functionDefs.add(functionDef)
             if otherCode != "":
-                writeCode(otherCode, splitFile(filename).name & ".py")
+                entryCode.add(otherCode)
 
     if target in ["exe", "ir", "zip"]:
         # Runs the ending clause for LLVM targets
@@ -273,6 +275,10 @@ when isMainModule:
     elif target == "rust":
         # Runs the ending clause for rust targets
         rustPost(filename, functionDefs, entryCode)
+
+    elif target == "python":
+        # Runs the ending clause for rust targets
+        pythonPost(filename, functionDefs, entryCode)
 
     # Compiles the LLVM
     runLLVMIR(filename, args, target)

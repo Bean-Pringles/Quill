@@ -142,8 +142,12 @@ proc inputIRGenerator*(
             commandsCalled.add("use std::io::Write;")
 
         rustCode &= "print!(\"" & cleanPrompt & "\");\n"
-        rustCode &= "let mut __stdout = io::stdout();\n"
-        rustCode &= "__stdout.flush().unwrap();\n"
+        
+        if not ("let mut _stdout" in commandsCalled):
+            rustCode &= "let mut _stdout = io::stdout();\n"
+            commandsCalled.add("let mut _stdout")
+
+        rustCode &= "_stdout.flush().unwrap();\n"
 
         let inputVarName = "input_string" & $inputBufferCounter
         rustCode &= "let mut " & inputVarName & " = String::new();\n"

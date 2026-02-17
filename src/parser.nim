@@ -1,6 +1,7 @@
 import tables
 import strutils
-import registry as reg # Import the shared registry with alias
+import registry as reg
+import importstate
 
 type
     Node* = ref object
@@ -43,11 +44,24 @@ proc parseString(p: var Parser): string =
         p.advance()
 
 proc parseIdentifier(p: var Parser): string =
+    ## Parses a plain identifier: letters, digits, underscores.
+    ## Does NOT consume dots — dot-chaining is handled at call sites.
     result = ""
-    while p.currentChar != '\0' and (p.currentChar.isAlphaNumeric() or
-            p.currentChar == '_'):
+    while p.currentChar != '\0' and (p.currentChar.isAlphaNumeric() or p.currentChar == '_'):
         result.add(p.currentChar)
         p.advance()
+
+proc parseDottedIdentifier(p: var Parser): string =
+    ## Parses "identifier" or "lib.command" — consumes one optional dot segment.
+    ## e.g. "os.clrscreen"  or just  "print"
+    result = p.parseIdentifier()
+    if p.currentChar == '.' and result.len > 0:
+        p.advance()  # consume the '.'
+        let rhs = p.parseIdentifier()
+        if rhs.len == 0:
+            echo "[!] Parse error: expected command name after '.'"
+            quit(1)
+        result = result & "." & rhs
 
 # Forward declaration
 proc parseExpression(p: var Parser): Node
@@ -59,162 +73,160 @@ proc parseArgument(p: var Parser): Node =
         return Node(isCall: false, value: "")
 
     if p.currentChar in {'"', '\''}:
-        # Include quotes in the value so let/print can handle them
         let quoteChar = p.currentChar
         let stringContent = p.parseString()
         return Node(isCall: false, value: quoteChar & stringContent & quoteChar)
 
-    # Check if this is a command call (identifier followed by '(')
     if p.currentChar.isAlphaAscii() or p.currentChar == '_':
         let startPos = p.pos
-        let identifier = p.parseIdentifier()
+        let startChar = p.currentChar
+        let identifier = p.parseDottedIdentifier()
         p.skipWhitespace()
-        
-        # If followed by '(', it's a command call
+
         if p.currentChar == '(':
-            # Reset and parse as expression/command
+            # Reset and parse as a full expression
             p.pos = startPos
-            p.currentChar = p.text[p.pos]
+            p.currentChar = startChar
             return p.parseExpression()
         else:
-            # Just an identifier/variable reference
             return Node(isCall: false, value: identifier)
 
-    return Node(isCall: false, value: "")
+    # Numeric or other literal
+    var value: string
+    while p.currentChar != '\0' and p.currentChar != ',' and
+          p.currentChar != ')' and not (p.currentChar in Whitespace):
+        value.add(p.currentChar)
+        p.advance()
+    return Node(isCall: false, value: value)
 
 proc parseLetStatement(p: var Parser, commandName: string): Node =
-    ## Parses: let/const/var x: i32 = 4 OR let/const/var x: string = "Hello" OR let x: string = input("Hi")
+    ## let/const x: type = value_or_call
     p.skipWhitespace()
-    
-    # Parse variable name
+
     let varName = p.parseIdentifier()
     p.skipWhitespace()
-    
-    # Expect ':'
+
     if p.currentChar != ':':
-        echo "Expected ':' after variable name"
-        return Node(isCall: false, value: "")
+        echo "[!] Parse error: expected ':' after variable name in '" & commandName & "'"
+        quit(1)
     p.advance()
     p.skipWhitespace()
-    
-    # Parse type
+
     let varType = p.parseIdentifier()
     p.skipWhitespace()
-    
-    # Expect '='
+
     if p.currentChar != '=':
-        echo "Expected '=' after type"
-        return Node(isCall: false, value: "")
+        echo "[!] Parse error: expected '=' after type in '" & commandName & "'"
+        quit(1)
     p.advance()
     p.skipWhitespace()
-    
-    # Parse value - can be a string, number, identifier, or command call
+
     var valueNode: Node
     if p.currentChar in {'"', '\''}:
-        # Parse string literal with quotes
         let quoteChar = p.currentChar
         let stringContent = p.parseString()
         valueNode = Node(isCall: false, value: quoteChar & stringContent & quoteChar)
     elif p.currentChar.isAlphaAscii() or p.currentChar == '_':
-        # Could be identifier or command call
         let startPos = p.pos
-        let identifier = p.parseIdentifier()
+        let startChar = p.currentChar
+        let identifier = p.parseDottedIdentifier()
         p.skipWhitespace()
-        
         if p.currentChar == '(':
-            # It's a command call - reset and parse it
             p.pos = startPos
-            p.currentChar = p.text[p.pos]
+            p.currentChar = startChar
             valueNode = p.parseExpression()
         else:
-            # Just an identifier or number
             valueNode = Node(isCall: false, value: identifier)
     else:
-        # Parse numeric value
         var value: string
         while p.currentChar != '\0' and not (p.currentChar in Whitespace):
             value.add(p.currentChar)
             p.advance()
         valueNode = Node(isCall: false, value: value)
-    
-    # Create a command node with the actual command name (let/const/var)
+
     result = Node(
         isCall: true,
         commandName: commandName,
         args: @[
             Node(isCall: false, value: varName),
             Node(isCall: false, value: varType),
-            valueNode  # This can now be a command call node
+            valueNode
         ]
     )
 
 proc parseAssignment(p: var Parser, varName: string): Node =
-    ## Parses: varname = value (where value can be a command call)
+    ## varname = value_or_call
     p.skipWhitespace()
-    
-    # Expect '='
+
     if p.currentChar != '=':
-        echo "Expected '=' in assignment"
-        return Node(isCall: false, value: "")
+        echo "[!] Parse error: expected '=' in assignment"
+        quit(1)
     p.advance()
     p.skipWhitespace()
-    
-    # Parse value - can be a string, number, identifier, or command call
+
     var valueNode: Node
     if p.currentChar in {'"', '\''}:
         let quoteChar = p.currentChar
         let stringContent = p.parseString()
         valueNode = Node(isCall: false, value: quoteChar & stringContent & quoteChar)
     elif p.currentChar.isAlphaAscii() or p.currentChar == '_':
-        # Could be identifier or command call
         let startPos = p.pos
-        let identifier = p.parseIdentifier()
+        let startChar = p.currentChar
+        let identifier = p.parseDottedIdentifier()
         p.skipWhitespace()
-        
         if p.currentChar == '(':
-            # It's a command call - reset and parse it
             p.pos = startPos
-            p.currentChar = p.text[p.pos]
+            p.currentChar = startChar
             valueNode = p.parseExpression()
         else:
-            # Just an identifier
             valueNode = Node(isCall: false, value: identifier)
     else:
-        # Parse numeric value
         var value: string
         while p.currentChar != '\0' and not (p.currentChar in Whitespace):
             value.add(p.currentChar)
             p.advance()
         valueNode = Node(isCall: false, value: value)
-    
+
     result = Node(
         isCall: true,
         commandName: "assign",
         args: @[
             Node(isCall: false, value: varName),
-            valueNode  # This can now be a command call node
+            valueNode
         ]
     )
 
+proc parseImportStatement(p: var Parser): Node =
+    ## import <libname>   — no parens, compile-time directive
+    p.skipWhitespace()
+    let libName = p.parseIdentifier()
+    if libName.len == 0:
+        echo "[!] Parse error: expected library name after 'import'"
+        quit(1)
+    result = Node(
+        isCall: true,
+        commandName: "import",
+        args: @[Node(isCall: false, value: libName)]
+    )
+
 proc parseExpression(p: var Parser): Node =
-    ## Parses a command call expression
+    ## Parses a command call: name(...) or lib.cmd(...)
     p.skipWhitespace()
 
-    let commandName = p.parseIdentifier()
+    let commandName = p.parseDottedIdentifier()
     p.skipWhitespace()
 
     if p.currentChar != '(':
         return Node(isCall: false, value: commandName)
 
-    p.advance()
+    p.advance()  # consume '('
     var args: seq[Node] = @[]
 
     while p.currentChar != '\0' and p.currentChar != ')':
         p.skipWhitespace()
-        if p.currentChar == ')':
-            break
+        if p.currentChar == ')': break
 
-        let arg = p.parseArgument()  # This now supports nested calls
+        let arg = p.parseArgument()
         if arg.isCall or arg.value != "":
             args.add(arg)
 
@@ -232,29 +244,34 @@ proc parseExpression(p: var Parser): Node =
 proc parseCommandCall(p: var Parser): Node =
     p.skipWhitespace()
 
-    let commandName = p.parseIdentifier()
+    let commandName = p.parseDottedIdentifier()
     p.skipWhitespace()
 
-    # Special handling for "let", "const", statements
+    # Compile-time keywords — no parens
+    if commandName == "import":
+        return p.parseImportStatement()
+
+    # Declaration keywords
     if commandName in ["let", "const"]:
         return p.parseLetStatement(commandName)
-    
-    # Check if it's an assignment (varname = value)
-    if p.currentChar == '=':
+
+    # Assignment: plain identifier followed immediately by '='
+    # (dotted names can't be assigned to)
+    if p.currentChar == '=' and '.' notin commandName:
         return p.parseAssignment(commandName)
 
+    # Regular command call with parens
     if p.currentChar != '(':
         return Node(isCall: false, value: commandName)
 
-    p.advance()
+    p.advance()  # consume '('
     var args: seq[Node] = @[]
 
     while p.currentChar != '\0' and p.currentChar != ')':
         p.skipWhitespace()
-        if p.currentChar == ')':
-            break
+        if p.currentChar == ')': break
 
-        let arg = p.parseArgument()  # This now supports nested calls
+        let arg = p.parseArgument()
         if arg.isCall or arg.value != "":
             args.add(arg)
 
@@ -272,109 +289,73 @@ proc parseCommandCall(p: var Parser): Node =
 proc parse*(p: var Parser): Node =
     return p.parseCommandCall()
 
-proc generateIR*(node: Node, commandsCalled: var seq[string], commandNum: var int, vars: var Table[string, (string, string, int, bool)], cmdVal: var seq[string], target: string, lineNumber: int): (
-        string, string, string, seq[string], int, Table[string, (string, string, int, bool)], seq[string]) =
-    # Returns: (globalDecl, functionDef, entryCode, commandsCalled, commandNum, vars, cmdVal)
-    # Generates IR code from the parsed command AST
-    if node.isCall:
-        if reg.irGenerators.hasKey(node.commandName):
-            var argStrings: seq[string] = @[]
-            var argCmdVals: seq[string] = @[]  # Track cmdVal for each arg
-            
-            # Accumulate nested IR code
-            var accumulatedGlobals: seq[string] = @[]
-            var accumulatedFunctions: seq[string] = @[]
-            var accumulatedEntry: seq[string] = @[]
-            
-            for arg in node.args:
-                # Handle nested command calls
-                if arg.isCall:
-                    # Recursively generate IR for nested command
-                    var nestedCmdVal: seq[string] = @[]
-                    let (nestedGlobal, nestedFunc, nestedEntry, nestedCalls, nestedNum, nestedVars, returnedCmdVal) = 
-                        generateIR(arg, commandsCalled, commandNum, vars, nestedCmdVal, target, lineNumber)
-                    
-                    # Update state from nested call
-                    commandsCalled = nestedCalls
-                    commandNum = nestedNum
-                    vars = nestedVars
-                    
-                    # Accumulate the nested IR code
-                    if nestedGlobal != "":
-                        accumulatedGlobals.add(nestedGlobal)
-                    if nestedFunc != "":
-                        accumulatedFunctions.add(nestedFunc)
-                    if nestedEntry != "":
-                        accumulatedEntry.add(nestedEntry)
-                    
-                    # Pass the cmdVal from the nested call as the argument
-                    if returnedCmdVal.len > 0:
-                        argStrings.add(returnedCmdVal[0])
-                        argCmdVals.add(returnedCmdVal[0])
-                    else:
-                        argStrings.add("")
-                        argCmdVals.add("")
-                else:
-                    argStrings.add(arg.value)
-                    argCmdVals.add("")  # No cmdVal for literal values
-            
-            let (globalDecl, functionDef, entryCode, newCommandsCalled, newCommandNum, newVars, returnedCmdVal) = 
-                reg.irGenerators[node.commandName](argStrings, commandsCalled, commandNum, vars, argCmdVals, target, lineNumber)
-            
-            cmdVal = returnedCmdVal  # Update the output cmdVal
-            
-            # Combine accumulated nested IR with parent IR
-            var finalGlobal: string
-            var finalFunction: string
-            var finalEntry: string
-            
-            # Add accumulated nested code first
-            if accumulatedGlobals.len > 0:
-                finalGlobal = accumulatedGlobals.join("\n")
-            if accumulatedFunctions.len > 0:
-                finalFunction = accumulatedFunctions.join("\n")
-            if accumulatedEntry.len > 0:
-                finalEntry = accumulatedEntry.join("\n")
-            
-            # Then add parent code
-            if globalDecl != "":
-                if finalGlobal != "":
-                    finalGlobal = finalGlobal & "\n" & globalDecl
-                else:
-                    finalGlobal = globalDecl
-            
-            if functionDef != "":
-                if finalFunction != "":
-                    finalFunction = finalFunction & "\n" & functionDef
-                else:
-                    finalFunction = functionDef
-            
-            if entryCode != "":
-                if finalEntry != "":
-                    finalEntry = finalEntry & "\n" & entryCode
-                else:
-                    finalEntry = entryCode
-            
-            # CRITICAL FIX: Handle runtime values for let/const commands
-            # Generate the store AFTER nested commands have executed
-            if node.commandName in ["let", "const"] and returnedCmdVal.len == 0 and target in ["exe", "ir", "zip"]:
-                # Check if the variable was marked as a command result
-                let varName = argStrings[0]
-                if varName in newVars:
-                    let (varType, value, strLen, isCommandResult) = newVars[varName]
-                    if isCommandResult and varType == "ptr":
-                        # Generate the store NOW, after nested commands have run
-                        let storeCode = "  store ptr " & value & ", ptr %" & varName & ", align 8"
-                        
-                        # Add it to finalEntry AFTER accumulated nested code
-                        if finalEntry != "":
-                            finalEntry = finalEntry & "\n" & storeCode
-                        else:
-                            finalEntry = storeCode
-            
-            return (finalGlobal, finalFunction, finalEntry, newCommandsCalled, newCommandNum, newVars, returnedCmdVal)
-        else:
-            echo "Unknown command: ", node.commandName
-            return ("", "", "", commandsCalled, commandNum, vars, @[])
-    else:
+proc generateIR*(
+    node: Node,
+    commandsCalled: var seq[string],
+    commandNum: var int,
+    vars: var Table[string, (string, string, int, bool)],
+    cmdVal: var seq[string],
+    target: string,
+    lineNumber: int
+): (string, string, string, seq[string], int, Table[string, (string, string, int, bool)], seq[string]) =
+
+    if not node.isCall:
         return ("", "", "", commandsCalled, commandNum, vars, @[])
+
+    # Resolve the command — enforces import rules, quits on unknown commands
+    let resolvedKey = reg.resolveCommand(node.commandName, lineNumber)
+
+    var argStrings: seq[string] = @[]
+    var argCmdVals: seq[string] = @[]
+    var accumulatedGlobals: seq[string] = @[]
+    var accumulatedFunctions: seq[string] = @[]
+    var accumulatedEntry: seq[string] = @[]
+
+    for arg in node.args:
+        if arg.isCall:
+            var nestedCmdVal: seq[string] = @[]
+            let (nestedGlobal, nestedFunc, nestedEntry, nestedCalls, nestedNum, nestedVars, returnedCmdVal) =
+                generateIR(arg, commandsCalled, commandNum, vars, nestedCmdVal, target, lineNumber)
+
+            commandsCalled = nestedCalls
+            commandNum = nestedNum
+            vars = nestedVars
+
+            if nestedGlobal != "": accumulatedGlobals.add(nestedGlobal)
+            if nestedFunc   != "": accumulatedFunctions.add(nestedFunc)
+            if nestedEntry  != "": accumulatedEntry.add(nestedEntry)
+
+            if returnedCmdVal.len > 0:
+                argStrings.add(returnedCmdVal[0])
+                argCmdVals.add(returnedCmdVal[0])
+            else:
+                argStrings.add("")
+                argCmdVals.add("")
+        else:
+            argStrings.add(arg.value)
+            argCmdVals.add("")
+
+    let (globalDecl, functionDef, entryCode, newCommandsCalled, newCommandNum, newVars, returnedCmdVal) =
+        reg.irGenerators[resolvedKey](argStrings, commandsCalled, commandNum, vars, argCmdVals, target, lineNumber)
+
+    cmdVal = returnedCmdVal
+
+    # Combine nested + parent IR
+    var finalGlobal   = accumulatedGlobals.join("\n")
+    var finalFunction = accumulatedFunctions.join("\n")
+    var finalEntry    = accumulatedEntry.join("\n")
+
+    if globalDecl  != "": finalGlobal   = (if finalGlobal   != "": finalGlobal   & "\n" else: "") & globalDecl
+    if functionDef != "": finalFunction = (if finalFunction != "": finalFunction & "\n" else: "") & functionDef
+    if entryCode   != "": finalEntry    = (if finalEntry    != "": finalEntry    & "\n" else: "") & entryCode
+
+    # Handle runtime store for let/const whose value came from a command call
+    if node.commandName in ["let", "const"] and returnedCmdVal.len == 0 and target in ["exe", "ir", "zip"]:
+        let varName = argStrings[0]
+        if varName in newVars:
+            let (varType, value, _, isCommandResult) = newVars[varName]
+            if isCommandResult and varType == "ptr":
+                let storeCode = "  store ptr " & value & ", ptr %" & varName & ", align 8"
+                finalEntry = (if finalEntry != "": finalEntry & "\n" else: "") & storeCode
+
+    return (finalGlobal, finalFunction, finalEntry, newCommandsCalled, newCommandNum, newVars, returnedCmdVal)

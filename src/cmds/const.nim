@@ -117,7 +117,7 @@ proc constIRGenerator*(args: seq[string], commandsCalled: var seq[string], comma
             if value.len > 0 and (value[^1] == '"' or value[^1] == '\''):
                 value = value[0 .. ^2]
             strLen = value.len
-            rustVal = rustVal & ".to_string()"
+            rustVal = rustVal & ".trim().to_string()"
         else:
             strLen = 0
         
