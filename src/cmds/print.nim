@@ -21,7 +21,6 @@ proc printIRGenerator*(
         var entryCode: string
         var functionDef: string
         var byteCount = 0
-        var needsNewGlobal = true
 
         # Detect OS at compile time
         when defined(windows):
@@ -245,7 +244,6 @@ proc printIRGenerator*(
 
     elif target == "rust":
         if args[0] in vars:
-            let (varType, varValue, strLength, isCommandResult) = vars[args[0]]
             var rustCommand = "println!(\"{}\", " & args[0] & ");"
             return ("", "", rustCommand, commandsCalled, commandNum, vars, @[])
 
@@ -275,7 +273,6 @@ proc printIRGenerator*(
 
     elif target == "python":
         if args[0] in vars:
-            let (varType, varValue, strLength, isCommandResult) = vars[args[0]]
             var pythonCommand = "print(" & args[0] & ")"
             return ("", "", pythonCommand, commandsCalled, commandNum, vars, @[])
 

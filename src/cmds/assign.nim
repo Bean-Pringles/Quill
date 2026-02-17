@@ -55,7 +55,7 @@ proc assignIRGenerator*(
             echo "[!] Error on line " & $lineNumber & ": up Variable '" & varName & "' is not defined."
             quit(1)
 
-        let (llvmType, oldValue, strLen, isConst) = vars[varName]
+        let (llvmType, _, _, isConst) = vars[varName]
 
         if isConst:
             echo "[!] Error on line " & $lineNumber & ": up Cannot assign to constant variable '" & varName & "'."
@@ -70,7 +70,7 @@ proc assignIRGenerator*(
         if isVariableRef:
             # This is a reference to another variable
             # We need to load from the source variable and store to the destination
-            let (srcType, srcValue, srcStrLen, srcIsCommandResult) = vars[value]
+            let (_, srcValue, srcStrLen, srcIsCommandResult) = vars[value]
             
             # Generate load and store
             let tempReg = "%temp_assign_" & $commandNum
@@ -134,7 +134,7 @@ proc assignIRGenerator*(
             echo "[!] Error on line " & $lineNumber & ": up Variable '" & varName & "' is not defined."
             quit(1)
         
-        let (varType, oldValue, strLen, isConst) = vars[varName]
+        let (varType, _, _, isConst) = vars[varName]
         
         if isConst:
             echo "[!] Error on line " & $lineNumber & ": up Cannot assign to constant variable '" & varName & "'."
@@ -167,7 +167,7 @@ proc assignIRGenerator*(
             echo "[!] Error on line " & $lineNumber & ": up Variable '" & varName & "' is not defined."
             quit(1)
         
-        let (varType, oldValue, strLen, isConst) = vars[varName]
+        let (varType, _, _, isConst) = vars[varName]
         
         if isConst:
             echo "[!] Error on line " & $lineNumber & ": up Cannot assign to constant variable '" & varName & "'."
@@ -201,7 +201,7 @@ proc assignIRGenerator*(
             echo "[!] Error on line " & $lineNumber & ": up Variable '" & varName & "' is not defined."
             quit(1)
         
-        let (varType, oldValue, strLen, isConst) = vars[varName]
+        let (varType, _, _, isConst) = vars[varName]
         
         if isConst:
             echo "[!] Error on line " & $lineNumber & ": up Cannot assign to constant variable '" & varName & "'."

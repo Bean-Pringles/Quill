@@ -1,8 +1,4 @@
 # cmds/import.nim
-
-import os, strutils, tables
-import ../importstate
-
 proc importIRGenerator*(
     args: seq[string],
     commandsCalled: var seq[string],

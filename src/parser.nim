@@ -1,7 +1,6 @@
 import tables
 import strutils
 import registry as reg
-import importstate
 
 type
     Node* = ref object

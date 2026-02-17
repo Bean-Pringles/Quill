@@ -48,6 +48,7 @@ import ../registry
 import ../importstate
 import tables
 import strutils
+import os
 
 """
 

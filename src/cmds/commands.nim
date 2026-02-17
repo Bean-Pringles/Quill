@@ -6,6 +6,7 @@ import ../registry
 import ../importstate
 import tables
 import strutils
+import os
 
 include "assign.nim"
 include "const.nim"
