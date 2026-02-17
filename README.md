@@ -51,6 +51,8 @@ Or to declare a mutable variable, y, with the value of 4, you would do:
 let y: i32 = 4
 ```
 
+For more information, check out https://github.com/Bean-Pringles/Quill/wiki
+
 ## Setup
 
 The compiler and setup is already compiled in the ./build/compiler/<os platform> and ./build/setup/wizard/<os platform>. You can run the setup script as an administrator (If you want to register the file types) and choose the setup options you want. This will setup everything with no extra work required.
