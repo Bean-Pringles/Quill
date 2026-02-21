@@ -1,0 +1,50 @@
+=== Advanced Expression Tests ===
+Test 1: Large Numbers
+3000
+3500
+5000
+Test 2: Zero Edge Cases
+5
+10
+0
+20
+Test 3: Chained Operations
+15
+82
+24
+Test 4: Complex String Concatenation
+ABCDE
+The quick brown fox
+Test 5: Multiple Assignments
+5
+10
+15
+Test 6: String Reassignment
+Alice
+Bob
+Charlie
+Test 7: Expression Priority
+11
+8
+7
+Test 8: Modulo Edge Cases
+0
+1
+2
+Test 9: Parentheses Override
+16
+2
+2
+Test 10: Deep Nesting
+16
+6
+Test 11: Float Operations
+4.0
+7.3
+10.0
+5.0
+Test 12: Mixed Types
+7.5
+7.0
+10.0
+=== Advanced Tests Complete ===

@@ -1,0 +1,112 @@
+// Comprehensive Expression Evaluation Test Script
+
+// Test 1: Basic arithmetic (compile-time)
+print("=== Test 1: Basic Arithmetic ===")
+print(3 + 5)
+print(10 - 3)
+print(4 * 7)
+print(20 / 4)
+print(17 % 5)
+
+// Test 2: Operator precedence
+print("=== Test 2: Operator Precedence ===")
+print(2 + 3 * 4)        // Should be 14
+print(10 - 2 * 3)        // Should be 4
+print(20 / 4 + 5)        // Should be 10
+
+// Test 3: Parentheses
+print("=== Test 3: Parentheses ===")
+print((2 + 3) * 4)      // Should be 20
+print((10 - 2) * 3)     // Should be 24
+print(20 / (4 + 1))     // Should be 4
+
+// Test 4: String concatenation (compile-time)
+print("=== Test 4: String Concatenation ===")
+print("Hello" + "World")
+print("Result: " + "42")
+print("A" + "B" + "C")
+
+// Test 5: Floating point operations
+print("=== Test 5: Floating Point ===")
+print(3.5 + 2.5)
+print(10.0 / 3.0)
+print(7.5 * 2.0)
+
+// Test 6: Variables with literals
+print("=== Test 6: Variables ===")
+let x: i32 = 10
+let y: i32 = 5
+let sum: i32 = 15
+let msg: string = "Hello"
+
+print(x)
+print(y)
+print(sum)
+print(msg)
+
+// Test 7: Compile-time evaluation in declarations
+print("=== Test 7: Compile-time in Declarations ===")
+let result1: i32 = 5 + 10
+let result2: i32 = 100 - 25
+let result3: i32 = 6 * 7
+let greeting: string = "Hello, " + "World!"
+
+print(result1)
+print(result2)
+print(result3)
+print(greeting)
+
+// Test 8: Complex expressions
+print("=== Test 8: Complex Expressions ===")
+print(2 + 3 * 4 - 5)                    // Should be 9
+print((10 + 5) * 2 / 3)                 // Should be 10
+print(100 - 20 * 2 + 15)                // Should be 75
+
+// Test 9: Negative numbers
+print("=== Test 9: Negative Numbers ===")
+print(-5 + 10)
+print(5 + -3)
+print(-10 * 2)
+
+// Test 10: Assignment with expressions
+print("=== Test 10: Assignment with Expressions ===")
+let val: i32 = 100
+val = 50 + 50
+print(val)
+val = 10 * 10
+print(val)
+
+// Test 11: String operations in assignments
+print("=== Test 11: String Assignment ===")
+let text: string = "Initial"
+text = "Updated" + " Value"
+print(text)
+
+// Test 12: Constants with expressions
+print("=== Test 12: Constants ===")
+const PI: i32 = 3
+const DOUBLE_PI: i32 = 6
+const MESSAGE: string = "Constant" + " String"
+
+print(PI)
+print(DOUBLE_PI)
+print(MESSAGE)
+
+// Test 13: Modulo operations
+print("=== Test 13: Modulo Operations ===")
+print(10 % 3)
+print(17 % 5)
+print(100 % 7)
+
+// Test 14: Division by different numbers
+print("=== Test 14: Division Tests ===")
+print(100 / 10)
+print(50 / 5)
+print(144 / 12)
+
+// Test 15: Nested parentheses
+print("=== Test 15: Nested Parentheses ===")
+print(((2 + 3) * (4 + 1)))              // Should be 25
+print((10 - (2 + 3)) * 2)               // Should be 10
+
+print("=== All Tests Complete ===")

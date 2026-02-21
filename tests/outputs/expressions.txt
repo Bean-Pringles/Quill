@@ -1,0 +1,61 @@
+=== Test 1: Basic Arithmetic ===
+8
+7
+28
+5
+2
+=== Test 2: Operator Precedence ===
+14
+4
+10
+=== Test 3: Parentheses ===
+20
+24
+4
+=== Test 4: String Concatenation ===
+HelloWorld
+Result: 42
+ABC
+=== Test 5: Floating Point ===
+6.0
+3.3333333333333335
+15.0
+=== Test 6: Variables ===
+10
+5
+15
+Hello
+=== Test 7: Compile-time in Declarations ===
+15
+75
+42
+Hello, World!
+=== Test 8: Complex Expressions ===
+9
+10
+75
+=== Test 9: Negative Numbers ===
+5
+2
+-20
+=== Test 10: Assignment with Expressions ===
+100
+100
+=== Test 11: String Assignment ===
+Updated Value
+=== Test 12: Constants ===
+3
+6
+Constant String
+=== Test 13: Modulo Operations ===
+1
+2
+2
+=== Test 14: Division Tests ===
+10
+10
+12
+=== Test 15: Nested Parentheses ===
+25
+10
+=== All Tests Complete ===

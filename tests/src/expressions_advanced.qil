@@ -1,0 +1,91 @@
+// Advanced Expression Test - Runtime and Input Integration
+
+print("=== Advanced Expression Tests ===")
+
+// Test 1: Large numbers
+print("Test 1: Large Numbers")
+print(1000 + 2000)
+print(5000 - 1500)
+print(100 * 50)
+
+// Test 2: Zero edge cases
+print("Test 2: Zero Edge Cases")
+print(0 + 5)
+print(10 - 0)
+print(0 * 100)
+print(100 / 5)
+
+// Test 3: Chained operations
+print("Test 3: Chained Operations")
+let chain1: i32 = 1 + 2 + 3 + 4 + 5
+let chain2: i32 = 100 - 10 - 5 - 3
+let chain3: i32 = 2 * 3 * 4
+
+print(chain1)
+print(chain2)
+print(chain3)
+
+// Test 4: Mixed string concatenation
+print("Test 4: Complex String Concatenation")
+let longMsg: string = "A" + "B" + "C" + "D" + "E"
+print(longMsg)
+
+let sentence: string = "The" + " " + "quick" + " " + "brown" + " " + "fox"
+print(sentence)
+
+// Test 5: Multiple assignments
+print("Test 5: Multiple Assignments")
+let counter: i32 = 0
+counter = 5
+print(counter)
+counter = 10
+print(counter)
+counter = 15
+print(counter)
+
+// Test 6: String reassignment
+print("Test 6: String Reassignment")
+let name: string = "Alice"
+print(name)
+name = "Bob"
+print(name)
+name = "Charlie"
+print(name)
+
+// Test 7: Expression priority test
+print("Test 7: Expression Priority")
+print(5 + 3 * 2)        // 11 not 16
+print(10 / 2 + 3)       // 8 not 2
+print(10 - 6 / 2)       // 7 not 2
+
+// Test 8: More modulo tests
+print("Test 8: Modulo Edge Cases")
+print(5 % 5)            // Should be 0
+print(7 % 3)            // Should be 1
+print(20 % 6)           // Should be 2
+
+// Test 9: Parentheses override precedence
+print("Test 9: Parentheses Override")
+print((5 + 3) * 2)      // 16 not 11
+print(10 / (2 + 3))     // 2 not 8
+print((10 - 6) / 2)     // 2 not 7
+
+// Test 10: Multiple levels of nesting
+print("Test 10: Deep Nesting")
+print(((1 + 2) * (3 + 4)) - 5)           // Should be 16
+print((((10 + 5) - 3) * 2) / 4)          // Should be 6
+
+// Test 11: Float precision
+print("Test 11: Float Operations")
+print(1.5 + 2.5)
+print(10.5 - 3.2)
+print(2.5 * 4.0)
+print(15.0 / 3.0)
+
+// Test 12: Mixed int and float
+print("Test 12: Mixed Types")
+print(5 + 2.5)
+print(10.0 - 3)
+print(2.5 * 4)
+
+print("=== Advanced Tests Complete ===")

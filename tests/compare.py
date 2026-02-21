@@ -4,7 +4,7 @@ import difflib
 
 # ===== Config =====
 startDir = os.getcwd()
-files = ["clear", "types"]
+files = ["clear", "types", "expressions_advanced", "expressions_basic", "expressions_edge_cases", "expressions"]
 pwd = os.path.dirname(os.path.abspath(__file__))
 os.chdir(pwd)
 # ==================

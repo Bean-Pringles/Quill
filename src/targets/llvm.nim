@@ -47,8 +47,6 @@ proc llvmPost*(filename: string, vars: Table[string, (string, string, int, bool)
                 of "i64", "double": "8"
                 of "i1": "1"
                 else: "4"
-            
-            writeCode("  %" & varName & " = alloca " & varType & ", align " & alignment, file)
                 
             writeCode("  %" & varName & " = alloca " & varType & ", align " & alignment, file)
             

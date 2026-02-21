@@ -1,6 +1,7 @@
 # Auto-generated — do not edit manually
 # Run:  nim e scripts/build_commands.nim
 
+import global
 import system
 import ../registry
 import ../importstate

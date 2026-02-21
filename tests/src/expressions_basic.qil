@@ -1,0 +1,19 @@
+# Quick Smoke Test - Basic Functionality
+
+print("Math: 3 + 5 =")
+print(3 + 5)
+
+print("Math: 10 * 2 =")
+print(10 * 2)
+
+print("String concat:")
+print("Hello" + " World")
+
+let x: i32 = 15 + 5
+print("Variable x =")
+print(x)
+
+let msg: string = "Test" + " " + "Complete"
+print(msg)
+
+print("All working!")

@@ -1,0 +1,40 @@
+=== Edge Case Tests ===
+Test 1: Single Values
+42
+0
+100
+Test 2: Single Strings
+Hello
+World
+
+Test 3: Parentheses Only
+5
+10
+5
+Test 4: Two Operands
+2
+4
+5
+Test 5: Spacing Variations
+10
+100
+5
+Test 6: Same Precedence
+18
+12
+24
+Test 7: Paren Combinations
+6
+6
+10
+Test 8: Negatives
+-5
+-5
+9
+Test 9: Large Expression
+55
+Test 10: Mixed Precedence
+11
+9
+26
+=== Edge Cases Complete ===

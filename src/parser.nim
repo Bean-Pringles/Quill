@@ -71,11 +71,7 @@ proc parseArgument(p: var Parser): Node =
     if p.currentChar == '\0':
         return Node(isCall: false, value: "")
 
-    if p.currentChar in {'"', '\''}:
-        let quoteChar = p.currentChar
-        let stringContent = p.parseString()
-        return Node(isCall: false, value: quoteChar & stringContent & quoteChar)
-
+    # Check if this starts with a function call (identifier followed by '(')
     if p.currentChar.isAlphaAscii() or p.currentChar == '_':
         let startPos = p.pos
         let startChar = p.currentChar
@@ -83,20 +79,47 @@ proc parseArgument(p: var Parser): Node =
         p.skipWhitespace()
 
         if p.currentChar == '(':
-            # Reset and parse as a full expression
+            # It's a nested function call
             p.pos = startPos
             p.currentChar = startChar
             return p.parseExpression()
         else:
-            return Node(isCall: false, value: identifier)
-
-    # Numeric or other literal
+            # Not a function call - just return the identifier as a value
+            return Node(isCall: false, value: identifier.strip())
+    
+    # Collect everything until comma or closing paren as a single expression
+    # This handles: numbers, operators, identifiers, strings, parentheses
     var value: string
-    while p.currentChar != '\0' and p.currentChar != ',' and
-          p.currentChar != ')' and not (p.currentChar in Whitespace):
+    var parenDepth = 0
+    var inString = false
+    var stringChar = '\0'
+    
+    while p.currentChar != '\0':
+        # Track if we're inside a string literal
+        if not inString and (p.currentChar == '"' or p.currentChar == '\''):
+            inString = true
+            stringChar = p.currentChar
+        elif inString and p.currentChar == stringChar:
+            inString = false
+            stringChar = '\0'
+        
+        # Only stop at comma/paren if we're not in a string and not in nested parens
+        if not inString and parenDepth == 0 and (p.currentChar == ',' or p.currentChar == ')'):
+            break
+        
+        # Track parentheses depth for nested expressions
+        if not inString:
+            if p.currentChar == '(':
+                parenDepth += 1
+            elif p.currentChar == ')':
+                parenDepth -= 1
+                if parenDepth < 0:
+                    break  # Closing paren of our argument list
+        
         value.add(p.currentChar)
         p.advance()
-    return Node(isCall: false, value: value)
+    
+    return Node(isCall: false, value: value.strip())
 
 proc parseLetStatement(p: var Parser, commandName: string): Node =
     ## let/const x: type = value_or_call
@@ -120,28 +143,24 @@ proc parseLetStatement(p: var Parser, commandName: string): Node =
     p.advance()
     p.skipWhitespace()
 
-    var valueNode: Node
-    if p.currentChar in {'"', '\''}:
-        let quoteChar = p.currentChar
-        let stringContent = p.parseString()
-        valueNode = Node(isCall: false, value: quoteChar & stringContent & quoteChar)
-    elif p.currentChar.isAlphaAscii() or p.currentChar == '_':
-        let startPos = p.pos
-        let startChar = p.currentChar
-        let identifier = p.parseDottedIdentifier()
-        p.skipWhitespace()
+    # Collect the entire value expression (everything until end of line/statement)
+    var value: string
+    var parenDepth = 0
+    
+    while p.currentChar != '\0':
         if p.currentChar == '(':
-            p.pos = startPos
-            p.currentChar = startChar
-            valueNode = p.parseExpression()
-        else:
-            valueNode = Node(isCall: false, value: identifier)
-    else:
-        var value: string
-        while p.currentChar != '\0' and not (p.currentChar in Whitespace):
-            value.add(p.currentChar)
-            p.advance()
-        valueNode = Node(isCall: false, value: value)
+            parenDepth += 1
+        elif p.currentChar == ')':
+            parenDepth -= 1
+        
+        # Don't include trailing content if we're at the end
+        if parenDepth == 0 and p.currentChar in {'\n', '\r'}:
+            break
+            
+        value.add(p.currentChar)
+        p.advance()
+    
+    let valueNode = Node(isCall: false, value: value.strip())
 
     result = Node(
         isCall: true,
@@ -163,28 +182,23 @@ proc parseAssignment(p: var Parser, varName: string): Node =
     p.advance()
     p.skipWhitespace()
 
-    var valueNode: Node
-    if p.currentChar in {'"', '\''}:
-        let quoteChar = p.currentChar
-        let stringContent = p.parseString()
-        valueNode = Node(isCall: false, value: quoteChar & stringContent & quoteChar)
-    elif p.currentChar.isAlphaAscii() or p.currentChar == '_':
-        let startPos = p.pos
-        let startChar = p.currentChar
-        let identifier = p.parseDottedIdentifier()
-        p.skipWhitespace()
+    # Collect the entire value expression
+    var value: string
+    var parenDepth = 0
+    
+    while p.currentChar != '\0':
         if p.currentChar == '(':
-            p.pos = startPos
-            p.currentChar = startChar
-            valueNode = p.parseExpression()
-        else:
-            valueNode = Node(isCall: false, value: identifier)
-    else:
-        var value: string
-        while p.currentChar != '\0' and not (p.currentChar in Whitespace):
-            value.add(p.currentChar)
-            p.advance()
-        valueNode = Node(isCall: false, value: value)
+            parenDepth += 1
+        elif p.currentChar == ')':
+            parenDepth -= 1
+        
+        if parenDepth == 0 and p.currentChar in {'\n', '\r'}:
+            break
+            
+        value.add(p.currentChar)
+        p.advance()
+    
+    let valueNode = Node(isCall: false, value: value.strip())
 
     result = Node(
         isCall: true,
