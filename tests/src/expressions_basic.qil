@@ -16,4 +16,4 @@ print(x)
 let msg: string = "Test" + " " + "Complete"
 print(msg)
 
-print("All working!")
+print("All working")

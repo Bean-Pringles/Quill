@@ -44,7 +44,7 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
                 vars[varName] = (llvmType, actualValue, 0, true)
             else:
                 # Evaluate the expression at compile time
-                let (evalResult, evalType, isRuntime) = evalExpression(actualValue, vars, target, lineNumber)
+                let (evalResult, _, isRuntime) = evalExpression(actualValue, vars, target, lineNumber)
                 
                 if isRuntime:
                     # It's a variable reference
@@ -61,7 +61,7 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
                     vars[varName] = (llvmType, "@" & globalName, strLen, false)
         else:
             # Evaluate numeric expression at compile time
-            let (evalResult, evalType, isRuntime) = evalExpression(value, vars, target, lineNumber)
+            let (evalResult, _, _) = evalExpression(value, vars, target, lineNumber)
             vars[varName] = (llvmType, evalResult, 0, false)
             entryCode = ""
 
@@ -70,22 +70,26 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
     elif target == "batch":
         var batchCode: string
         
-        # Evaluate expression
-        let (evalResult, evalType, isRuntime) = evalExpression(value, vars, target, lineNumber)
+        let (evalResult, _, isRuntime) = evalExpression(value, vars, target, lineNumber)
         
-        # Check if the value is a command (like input_var0)
-        if evalResult.startsWith("input_var") or isCommand(evalResult, vars):
-            vars[varName] = (varType, evalResult, 0, true)
-            batchCode = "set " & varName & "=!" & evalResult & "!"
+        # Only use delayed expansion for actual runtime refs (input results, known vars)
+        # not for values that just happen to be alphanumeric like "ABCDE"
+        let isRuntimeRef = isRuntime and
+                        (evalResult.startsWith("input_var") or evalResult in vars) and
+                        evalResult.allCharsInSet({'a'..'z', 'A'..'Z', '0'..'9', '_'})
+        
+        if isRuntimeRef:
+            vars[varName] = (varType, evalResult, 0, false)
+            batchCode = "set \"" & varName & "=!" & evalResult & "!\""
         else:
             let cleanValue = evalResult.replace("!", "^!")
             vars[varName] = (varType, cleanValue, cleanValue.len, false)
-            batchCode = "set " & varName & "=" & cleanValue
+            batchCode = "set \"" & varName & "=" & cleanValue & "\""
         
         return ("", "", batchCode, commandsCalled, commandNum, vars, @[])
 
     elif target == "rust":
-        let (evalResult, evalType, isRuntime) = evalExpression(value, vars, target, lineNumber)
+        let (evalResult, _, isRuntime) = evalExpression(value, vars, target, lineNumber)
         
         var rustType = case varType
             of "string": "String"
@@ -107,7 +111,7 @@ proc letIRGenerator*(args: seq[string], commandsCalled: var seq[string], command
         return ("", "", rustCode, commandsCalled, commandNum, vars, @[])
 
     elif target == "python":
-        let (evalResult, evalType, isRuntime) = evalExpression(value, vars, target, lineNumber)
+        let (evalResult, _, isRuntime) = evalExpression(value, vars, target, lineNumber)
         
         var pythonType = case varType
         of "string": "str"

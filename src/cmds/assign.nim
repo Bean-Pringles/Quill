@@ -35,7 +35,7 @@ proc assignIRGenerator*(
             quit(1)
 
         # Evaluate the expression
-        let (evalResult, evalType, isRuntime) = evalExpression(value, vars,
+        let (evalResult, _, isRuntime) = evalExpression(value, vars,
                 target, lineNumber)
 
         # Check if it's a command result (starts with %)
@@ -99,7 +99,7 @@ proc assignIRGenerator*(
                     ": up Cannot assign to constant variable '" & varName & "'."
             quit(1)
 
-        let (evalResult, evalType, isRuntime) = evalExpression(value, vars,
+        let (evalResult, _, isRuntime) = evalExpression(value, vars,
                 target, lineNumber)
 
         if evalResult.startsWith("input_var") or isRuntime:
@@ -159,7 +159,7 @@ proc assignIRGenerator*(
                     ": up Cannot assign to constant variable '" & varName & "'."
             quit(1)
 
-        let (evalResult, evalType, isRuntime) = evalExpression(value, vars,
+        var (evalResult, evalType, isRuntime) = evalExpression(value, vars,
                 target, lineNumber)
 
         if evalResult.startsWith("input_var") or isRuntime:
@@ -168,6 +168,10 @@ proc assignIRGenerator*(
             return ("", "", pythonCode, commandsCalled, newCommandNum, vars, @[])
 
         vars[varName] = (varType, evalResult, evalResult.len, false)
+        
+        if evalType == "string":
+            evalResult = "\"" & evalResult & "\""
+        
         let pythonCode = varName & " = " & evalResult
         return ("", "", pythonCode, commandsCalled, newCommandNum, vars, @[])
 

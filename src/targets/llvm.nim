@@ -1,6 +1,7 @@
 import std/os
 import fileWriter
 import tables
+import strutils
 
 proc llvmPre*(filename: string) =
     let file = splitFile(filename).name & ".ll"
@@ -37,6 +38,10 @@ proc llvmPost*(filename: string, vars: Table[string, (string, string, int, bool)
     writeCode("entry:", file)
         
     for varName, (varType, value, strLen, isCommandResult) in vars.pairs():
+        # Skip SSA-only values (they're generated in entryCode, not allocated)
+        if varType.startsWith("ssa_"):
+            continue
+            
         if varType == "ptr":
             # Only generate alloca, not store
             writeCode("  %" & varName & " = alloca ptr, align 8", file)

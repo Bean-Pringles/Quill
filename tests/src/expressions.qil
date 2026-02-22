@@ -49,7 +49,7 @@ print("=== Test 7: Compile-time in Declarations ===")
 let result1: i32 = 5 + 10
 let result2: i32 = 100 - 25
 let result3: i32 = 6 * 7
-let greeting: string = "Hello, " + "World!"
+let greeting: string = "Hello, " + "World"
 
 print(result1)
 print(result2)

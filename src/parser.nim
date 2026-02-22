@@ -32,16 +32,6 @@ proc skipWhitespace(p: var Parser) =
     while p.currentChar != '\0' and p.currentChar in Whitespace:
         p.advance()
 
-proc parseString(p: var Parser): string =
-    let quoteChar = p.currentChar
-    p.advance()
-    result = ""
-    while p.currentChar != '\0' and p.currentChar != quoteChar:
-        result.add(p.currentChar)
-        p.advance()
-    if p.currentChar == quoteChar:
-        p.advance()
-
 proc parseIdentifier(p: var Parser): string =
     ## Parses a plain identifier: letters, digits, underscores.
     ## Does NOT consume dots — dot-chaining is handled at call sites.

@@ -1,4 +1,4 @@
-let a: string = "Hello, World!"
+let a: string = "Hello, World"
 let b: i32 = 1
 let c: i64 = 2
 

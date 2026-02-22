@@ -9,3 +9,6 @@ import
 
 OS Library:
 clrscr
+
+Rand Library
+randint

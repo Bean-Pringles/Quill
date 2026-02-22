@@ -1,35 +1,68 @@
 @echo off
+setlocal EnableDelayedExpansion
 
-rem Move to scripts dir
-SET startDir=%CD%
+rem Save starting directory
+set startDir=%CD%
 cd /d %~dp0
 
-rem Generate exes
+echo [*] Cleaning old test files
+
+rem -------------------------
+rem Define tests
+rem -------------------------
+set tests=types clear expressions_advanced expressions_basic expressions_edge_cases expressions
+
+rem -------------------------
+rem Clean build outputs
+rem -------------------------
+for %%T in (%tests%) do (
+    del ..\tests\build\%%T.exe >nul 2>&1
+    del ..\tests\build\%%T.py  >nul 2>&1
+    del ..\tests\build\%%T.bat >nul 2>&1
+)
+
 echo [*] Compiling Tests
-rem Miscellaneous
-start "" /WAIT cmd /c "quill ../tests/src/types.qil >nul 2>&1"
-start "" /WAIT cmd /c "quill ../tests/src/clear.qil >nul 2>&1"
-rem Expressions
-start "" /WAIT cmd /c "quill ../tests/src/expressions_advanced.qil >nul 2>&1"
-start "" /WAIT cmd /c "quill ../tests/src/expressions_basic.qil >nul 2>&1"
-start "" /WAIT cmd /c "quill ../tests/src/expressions_edge_cases.qil >nul 2>&1"
-start "" /WAIT cmd /c "quill ../tests/src/expressions.qil >nul 2>&1"
 
-rem Move the exes
+rem -------------------------
+rem Compile native (exe)
+rem -------------------------
+for %%T in (%tests%) do (
+    "../build/compiler/windows/quill-compiler-windows-x86_64.exe" ../tests/src/%%T.qil >nul 2>&1
+)
+
+rem -------------------------
+rem Compile python target
+rem -------------------------
+for %%T in (%tests%) do (
+    "../build/compiler/windows/quill-compiler-windows-x86_64.exe" ../tests/src/%%T.qil -target=python >nul 2>&1
+)
+
+rem -------------------------
+rem Compile batch target
+rem -------------------------
+for %%T in (%tests%) do (
+    "../build/compiler/windows/quill-compiler-windows-x86_64.exe" ../tests/src/%%T.qil -target=batch >nul 2>&1
+)
+
 echo [*] Moving Tests
-rem Miscellaneous
-move ..\tests\src\types.exe ..\tests\build\ >nul 2>&1
-move ..\tests\src\clear.exe ..\tests\build\ >nul 2>&1
-rem Expressions
-move ..\tests\src\expressions_advanced.exe ..\tests\build\ >nul 2>&1
-move ..\tests\src\expressions_basic.exe ..\tests\build\ >nul 2>&1
-move ..\tests\src\expressions_edge_cases.exe ..\tests\build\ >nul 2>&1
-move ..\tests\src\expressions.exe ..\tests\build\ >nul 2>&1
 
-rem Run Python
-python ../tests/compare.py
+rem -------------------------
+rem Move generated files
+rem -------------------------
+for %%T in (%tests%) do (
+    if exist ..\tests\src\%%T.exe move ..\tests\src\%%T.exe ..\tests\build\ >nul 2>&1
+    if exist %%T.exe move %%T.exe ..\tests\build\ >nul 2>&1
+    if exist ..\tests\src\%%T.py  move ..\tests\src\%%T.py  ..\tests\build\ >nul 2>&1
+    if exist %%T.py  move %%T.py  ..\tests\build\ >nul 2>&1
+    if exist ..\tests\src\%%T.bat move ..\tests\src\%%T.bat ..\tests\build\ >nul 2>&1
+    if exist %%T.bat move %%T.bat ..\tests\build\ >nul 2>&1
+) 
 
-REM Return to original directory
+rem Run comparison
+python ../tests/compare_windows.py
+
+rem Restore directory
 cd /d %startDir%
 
 echo [*] Tests Completed
+endlocal

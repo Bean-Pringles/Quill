@@ -29,7 +29,7 @@ Hello
 15
 75
 42
-Hello, World!
+Hello, World
 === Test 8: Complex Expressions ===
 9
 10
