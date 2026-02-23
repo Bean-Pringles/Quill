@@ -66,4 +66,8 @@ for name in files:
     bat_path = os.path.join(pwd, "build", f"{name}.bat")
     compare_outputs(name, ["cmd", "/c", bat_path], "batch")
 
+for name in files:
+    rs_path = os.path.join(pwd, "build", f"{name}.rs")
+    compare_outputs(name, ["cargo", "eval", rs_path], "rust")
+
 os.chdir(startDir)

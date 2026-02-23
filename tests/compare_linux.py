@@ -69,5 +69,9 @@ for name in files:
     py_path = os.path.join(pwd, "build", f"{name}.py")
     compare_outputs(name, ["python3", py_path], "python")
 
+for name in files:
+    rs_path = os.path.join(pwd, "build", f"{name}.rs")
+    compare_outputs(name, ["cargo", "eval", rs_path], "rust")
+
 # Restore original directory
 os.chdir(startDir)
