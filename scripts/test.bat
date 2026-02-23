@@ -71,6 +71,18 @@ for %%T in (%tests%) do (
 rem Run comparison
 python ../tests/compare_windows.py
 
+rem -------------------------
+rem Clean build outputs
+rem -------------------------
+for %%T in (%tests%) do (
+    del ..\tests\build\%%T.exe >nul 2>&1
+    del ..\tests\build\%%T.py  >nul 2>&1
+    del ..\tests\build\%%T.bat >nul 2>&1
+    del ..\tests\build\%%T.rs >nul 2>&1
+    del ..\tests\build\%%T >nul 2>&1
+)
+
+
 rem Restore directory
 cd /d %startDir%
 

@@ -15,7 +15,7 @@ tests=("types" "expressions_advanced" "expressions_basic" "expressions_edge_case
 pushd "$(dirname "$0")" > /dev/null
 
 # -------------------------
-# Clean build outputs (no extension and .py files only)
+# Clean build outputs (no extension and .py and .rs files only)
 # -------------------------
 for t in "${tests[@]}"; do
     rm -f "../tests/build/${t}" "../tests/build/${t}.py" "../tests/build/${t}.rs" 2>/dev/null || true
@@ -64,6 +64,13 @@ done
 # Run comparison
 # -------------------------
 python3 ../tests/compare_linux.py
+
+# -------------------------
+# Clean up generated files
+# -------------------------
+for t in "${tests[@]}"; do
+    rm -f "../tests/build/${t}" "../tests/build/${t}.py" "../tests/build/${t}.rs" "../tests/build/${t}.exe" 2>/dev/null || true
+done
 
 # Restore directory
 popd > /dev/null
