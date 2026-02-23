@@ -40,8 +40,9 @@ This means all tests compiled and ran without error.
 # Dependencies
 
 Python (Windows)
-Python3 (Linux)
-Cargo-eval (Install through cargo install eval)
-Rust/Cargo/Rustup
-LLVM and Clang (Clang 16 on Linux)
-UPX And Strip
+
+- Python3 (Linux)
+- Cargo-eval (Install through command: cargo install eval)
+- Rust/Cargo/Rustup (All of Rust's toolchain)
+- LLVM and Clang (Clang 16 on Linux)
+- UPX And Strip
