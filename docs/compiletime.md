@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 # Compile Time
 
 Anything that can be evaluated at compile time is. This means while the source code looks like this
@@ -29,7 +28,6 @@ import random
 print(random.randint(1, 10) - 4)
 ```
 
-=======
 # Compile Time
 
 Anything that can be evaluated at compile time is. This means while the source code looks like this
@@ -60,5 +58,4 @@ import random
 print(random.randint(1, 10) - 4)
 ```
 
->>>>>>> Stashed changes
 This means that compiled code does not necessarily get evaluated at runtime, just if it depends on an external unknown value. 
