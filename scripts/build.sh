@@ -5,14 +5,14 @@
 startDir=$(pwd)
 
 # Change to the script's directory
-cd "$(dirname "$0")" || { echo "[ERROR] Failed to cd to script directory."; exit 1; }
+cd "$(dirname "$0")" || { echo "[!] Failed to cd to script directory."; exit 1; }
 
 echo "[*] Running build script..."
 
 # Run build.nim and exit if it fails
 nim r build.nim
 if [ $? -ne 0 ]; then
-    echo "[ERROR] build.nim failed. Aborting."
+    echo "[!] build.nim failed. Aborting."
     exit 1
 fi
 
@@ -26,11 +26,11 @@ fi
 # Compile in release mode and exit if it fails
 nim c -d:release --opt:size -d:danger -d:strip --passL:-s ../src/compiler.nim
 if [ $? -ne 0 ]; then
-    echo "[ERROR] compiler.nim compilation failed. Aborting."
+    echo "[!] compiler.nim compilation failed. Aborting."
     exit 1
 fi
 
-echo [*] Removing old compiled test files...
+echo "[*] Removing old compiled test files..."
 # Remove old test.exe, test.zip, and test.ll if they exist
 if [ -f "../src/test" ]; then
     rm "../src/test"

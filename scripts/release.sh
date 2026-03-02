@@ -7,11 +7,26 @@ startingDir=$(pwd)
 # Change to script directory
 cd "$(dirname "$0")" || exit 1
 
+# Initialize flag
+found=false
+
+# Check for -nt flag
+for arg in "$@"; do
+    if [[ "$arg" == "-nt" ]]; then
+        found=true
+        break
+    fi
+done
+
 # Run the other scripts
 ./remove.sh
 ./build.sh
 ./sign.sh
-./test.sh
+
+# Only run test.sh if -nt was NOT passed
+if ! $found; then
+    ./test.sh
+fi
 
 # Return to starting directory
 cd "$startingDir" || exit 1

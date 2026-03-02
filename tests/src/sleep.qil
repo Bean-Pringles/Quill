@@ -1,0 +1,5 @@
+import os
+import rand
+
+os.sleep(rand.randint(1, 4))
+os.sleep(1)

@@ -16,6 +16,7 @@ include "input.nim"
 include "let.nim"
 include "print.nim"
 include "stdlib/os/clrscr.nim"
+include "stdlib/os/sleep.nim"
 include "stdlib/rand/randint.nim"
 
 proc initCommands*() =
@@ -26,4 +27,5 @@ proc initCommands*() =
   registerIRGenerator("let", letIRGenerator)
   registerIRGenerator("print", printIRGenerator)
   registerIRGenerator("os.clrscr", osclrscrIRGenerator)
+  registerIRGenerator("os.sleep", ossleepIRGenerator)
   registerIRGenerator("rand.randint", randrandintIRGenerator)

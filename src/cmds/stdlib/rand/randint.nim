@@ -37,7 +37,7 @@ proc randrandintIRGenerator*(
             globalDecl &= "define i32 @rand_range(i32 %min, i32 %max) {\nentry:\n    %seed = call i32 @make_seed()\n    %next = call i32 @lcg_next(i32 %seed)\n\n    %range = sub i32 %max, %min\n    %range1 = add i32 %range, 1\n\n    %mod = urem i32 %next, %range1\n    %result = add i32 %mod, %min\n\n    ret i32 %result\n}\n\n"
 
         # Generate the SSA value in entryCode
-        entryCode = "  %" & ssaName & " = call i32 @rand_range(i32 " & smallVal & ", i32 " & bigVal & ")\n"
+        entryCode = "    %" & ssaName & " = call i32 @rand_range(i32 " & smallVal & ", i32 " & bigVal & ")\n"
         
         # Register with "ssa_i32" type so llvmPost skips creating alloca
         vars[ssaName] = ("ssa_i32", "%" & ssaName, 0, false)

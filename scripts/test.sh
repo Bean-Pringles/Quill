@@ -1,61 +1,86 @@
-#!/usr/bin/env bash
-set -e
-shopt -s nullglob
+#!/bin/bash
+
+# Save starting directory
+startDir=$(pwd)
+cd "$(dirname "$0")"
 
 echo "[*] Cleaning old test files"
 
 # -------------------------
 # Define tests
 # -------------------------
-tests=("types" "expressions_advanced" "expressions_basic" "expressions_edge_cases" "expressions")
+tests=(types clear expressions_advanced expressions_basic expressions_edge_cases expressions sleep)
 
 # -------------------------
-# Save starting directory and move to script directory
+# Clean build outputs
 # -------------------------
-pushd "$(dirname "$0")" > /dev/null
-
-# -------------------------
-# Clean build outputs (no extension and .py and .rs files only)
-# -------------------------
-for t in "${tests[@]}"; do
-    rm -f "../tests/build/${t}" "../tests/build/${t}.py" "../tests/build/${t}.rs" 2>/dev/null || true
+for test in "${tests[@]}"; do
+    rm -f "../tests/build/${test}" >/dev/null 2>&1
+    rm -f "../tests/build/${test}.py" >/dev/null 2>&1
+    rm -f "../tests/build/${test}.rs" >/dev/null 2>&1
 done
 
+echo "[*] Calling bash script, all errors after this point are compile time"
 echo "[*] Compiling Tests"
 
 # -------------------------
 # Compile native (no extension)
 # -------------------------
-for t in "${tests[@]}"; do
-    "../build/compiler/linux/quill-compiler-linux-x86_64" "../tests/src/${t}.qil" >/dev/null 2>&1
+for test in "${tests[@]}"; do
+    "../build/compiler/linux/quill-compiler-linux-x86_64" "../tests/src/${test}.qil" >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "[!] Compilation FAILED for ${test} on native"
+    fi
 done
 
 # -------------------------
-# Compile python target (.py)
+# Compile python target
 # -------------------------
-for t in "${tests[@]}"; do
-    "../build/compiler/linux/quill-compiler-linux-x86_64" "../tests/src/${t}.qil" -target=python >/dev/null 2>&1
+for test in "${tests[@]}"; do
+    "../build/compiler/linux/quill-compiler-linux-x86_64" "../tests/src/${test}.qil" -target=python >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "[!] Compilation FAILED for ${test} on python"
+    fi
 done
 
 # -------------------------
-# Compile rust target (.rs)
+# Compile rust target
 # -------------------------
-for t in "${tests[@]}"; do
-    "../build/compiler/linux/quill-compiler-linux-x86_64" "../tests/src/${t}.qil" -target=rust >/dev/null 2>&1
+for test in "${tests[@]}"; do
+    "../build/compiler/linux/quill-compiler-linux-x86_64" "../tests/src/${test}.qil" -target=rust >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "[!] Compilation FAILED for ${test} on rust"
+    fi
 done
 
 echo "[*] Moving Tests"
 
 # -------------------------
-# Move generated files (no extension and .py and .rs files)
+# Move generated files
 # -------------------------
-for t in "${tests[@]}"; do
-    for ext in "" "py" "rs"; do
-        src_file="../tests/src/${t}${ext:+.$ext}"
-        if [[ -f "$src_file" ]]; then
-            mv "$src_file" "../tests/build/"
-        elif [[ -f "${t}${ext:+.$ext}" ]]; then
-            mv "${t}${ext:+.$ext}" "../tests/build/"
+for test in "${tests[@]}"; do
+    # Loop over each extension (no extension for native binary)
+    for ext in "" py rs; do
+        # Check source folder first
+        if [ "$ext" = "" ]; then
+            SRC_FILE="../tests/src/${test}"
+        else
+            SRC_FILE="../tests/src/${test}.${ext}"
+        fi
+        
+        if [ -f "$SRC_FILE" ]; then
+            mv -f "$SRC_FILE" "../tests/build/" >/dev/null 2>&1
+        fi
+
+        # Check current folder
+        if [ "$ext" = "" ]; then
+            CUR_FILE="${test}"
+        else
+            CUR_FILE="${test}.${ext}"
+        fi
+        
+        if [ -f "$CUR_FILE" ]; then
+            mv -f "$CUR_FILE" "../tests/build/" >/dev/null 2>&1
         fi
     done
 done
@@ -66,13 +91,15 @@ done
 python3 ../tests/compare_linux.py
 
 # -------------------------
-# Clean up generated files
+# Clean build outputs
 # -------------------------
-for t in "${tests[@]}"; do
-    rm -f "../tests/build/${t}" "../tests/build/${t}.py" "../tests/build/${t}.rs" "../tests/build/${t}.exe" 2>/dev/null || true
+for test in "${tests[@]}"; do
+    rm -f "../tests/build/${test}" >/dev/null 2>&1
+    rm -f "../tests/build/${test}.py" >/dev/null 2>&1
+    rm -f "../tests/build/${test}.rs" >/dev/null 2>&1
 done
 
 # Restore directory
-popd > /dev/null
+cd "$startDir"
 
 echo "[*] Tests Completed"

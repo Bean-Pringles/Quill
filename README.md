@@ -3,10 +3,10 @@
   <h3>As Light as a Feather</h3>
   <!-- The functional badge code -->
   <img alt="Static Badge" src="https://img.shields.io/github/stars/Bean-Pringles/Quill">
-  <img alt="Static Badge" src="https://img.shields.io/badge/Language-Nim-orange">
-  <img alt="Static Badge" src="https://img.shields.io/badge/OS-Windows,%20Linux,%20MacOS-green">
-  <img alt="Static Badge" src="https://img.shields.io/badge/Version-v0.1.1-purple">
-  <img alt="Static Badge" src="https://img.shields.io/badge/CPU-x86-yellow">
+  <img alt="Static Badge" src="https://img.shields.io/badge/Language-Nim,%20Rust,%20Go-orange">
+  <img alt="Static Badge" src="https://img.shields.io/badge/OS-Windows,%20Linux-green">
+  <img alt="Static Badge" src="https://img.shields.io/badge/Version-v0.1.2-purple">
+  <img alt="Static Badge" src="https://img.shields.io/badge/CPU-x86_64-yellow">
   <img alt="Static Badge" src="https://img.shields.io/github/downloads/Bean-Pringles/Quill/total.svg">
   <img alt="Static Badge" src="https://img.shields.io/github/repo-size/Bean-Pringles/Quill">
   <img alt="Static Badge" src="https://img.shields.io/github/last-commit/Bean-Pringles/Quill">

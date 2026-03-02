@@ -65,6 +65,6 @@ else:
 writeFile(outFile, content)
 os.setCurrentDir(startingDir)
 
-echo "Generated cmds/commands.nim"
+echo "[*] Generated cmds/commands.nim"
 echo "  Top-level : ", entries.filterIt('.' notin it.registerKey).len
 echo "  Stdlib    : ", entries.filterIt('.' in it.registerKey).len

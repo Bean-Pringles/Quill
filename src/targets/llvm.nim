@@ -68,7 +68,7 @@ proc llvmPost*(filename: string, vars: Table[string, (string, string, int, bool)
         writeCode("  ret i32 0", file)
     else:
         # Linux syscall exit(0) - smallest possible exit
-        writeCode("  call void asm sideeffect \"movl $$60, %eax; xorl %edi, %edi; syscall\", \"~{dirflag},~{fpsr},~{flags}\"()", file)
-        writeCode("  unreachable", file)
+        writeCode("    call void asm sideeffect \"movl $$60, %eax; xorl %edi, %edi; syscall\", \"~{dirflag},~{fpsr},~{flags}\"()", file)
+        writeCode("    unreachable", file)
         
     writeCode("}", file)

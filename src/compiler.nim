@@ -1,4 +1,4 @@
-import std/os
+import os
 import osproc
 import strutils
 import system
@@ -36,6 +36,81 @@ proc countLinesInFile(filePath: string): int =
         quit(1)
     return lineCount
 
+proc devMode(dev: string, args: seq[string]) =
+    let currentPath = getAppFilename().parentDir()
+    let argsStr = args.join(" ")
+    var cmdPath: string
+    var tempPath: string
+    var command: string
+    var updatePath: string
+    var exitCode: int
+
+    case dev
+    of "c", "compile", "b", "build":
+        tempPath = joinPath(currentPath, "..", "..", "..", "scripts", "build")
+    of "s", "sign":
+        tempPath = joinPath(currentPath, "..", "..", "..", "scripts", "sign")
+    of "t", "test":
+        tempPath = joinPath(currentPath, "..", "..", "..", "scripts", "test")
+    of "ss", "sign-setup":
+        tempPath = joinPath(currentPath, "..", "..", "..", "scripts", "signSetup")
+    of "r", "release":
+        tempPath = joinPath(currentPath, "..", "..", "..", "scripts", "release")
+    else:
+        echo "[!] Invalid dev flag mode specified: ", dev
+        quit(1)
+
+    tempPath = absolutePath(tempPath)
+    cmdPath = tempPath
+
+    when defined(windows):
+        cmdPath &= ".bat"
+    else:
+        cmdPath &= ".sh"
+
+    if not fileExists(cmdPath):
+        echo "[!] Script not found: ", cmdPath
+        quit(1)
+
+    if dev notin ["s", "sign", "r", "release"]:
+        command = if argsStr.len > 0: cmdPath & " " & argsStr else: cmdPath
+        exitCode = execCmd(command)
+
+    else:
+        # Call exe update script to rewrite current EXE with the new one
+        tempPath = joinPath(currentPath, "..", "..", "..", "scripts", "exeUpdate")
+
+        tempPath = absolutePath(tempPath)
+        updatePath = tempPath
+
+        when defined(windows):
+            updatePath &= ".bat"
+        else:
+            updatePath &= ".sh"
+
+        if not fileExists(updatePath):
+            echo "[!] Update script not found: ", updatePath
+            quit(1)
+        
+        when defined(windows):
+            let cmdExe = getEnv("COMSPEC")  # C:\Windows\System32\cmd.exe
+
+            discard startProcess(
+                cmdExe,
+                args = @[
+                "/c",
+                "start", "" ,  # empty title required
+                updatePath,
+                cmdPath
+                ] & args,        # append each argument separately
+                options = {poDaemon}
+            )
+
+        else:
+            discard execCmd(updatePath & " " & cmdPath & " " & join(args, " "))
+    
+    quit(0)
+    
 # Moves the file back to the same dir as the src file
 proc moveOutputFile(filename: string, target: string) =
     var filePath: string
@@ -158,13 +233,31 @@ proc runLLVMIR(filename: string, args: seq[string], target: string) =
     moveOutputFile(filename, target)
 
 when isMainModule:
-    let args = commandLineParams()
+    var args = commandLineParams()
     
     # With no args tells about the compiler
     if args.len == 0:
         echo "[*] Compiler and Language Written by Bean_Pringles. https://github.com/Bean_Pringles"
         quit(1)
-    
+
+    var devArg: string
+    var devIndex = -1
+
+    # Find -dev= argument
+    for i, a in args:
+        if a.startsWith("-dev="):
+            devArg = a["-dev=".len .. ^1]
+            devIndex = i
+            break
+
+    # Handle dev mode only after the loop
+    if devIndex >= 0:
+        # Remove the dev argument
+        args.delete(devIndex)
+        
+        # Call dev-specific function
+        devMode(devArg, args)
+
     # Gets the filename and checks if it exists as well as it being a Quill file
     let filename = args[0]
     
@@ -189,12 +282,11 @@ when isMainModule:
         discard
     
     # Init Vars
-    var commandsCalled = newSeq[string]()
-    var commandNum = 0
     # Var Name : (LLVM Type, Value, String Length, isConst)
     var vars = initTable[string, (string, string, int, bool)]()
+    var commandsCalled = newSeq[string]()
+    var commandNum = 0
     var target = "exe"
-    
     var entryCode: seq[string] = @[]
     var globalDecls: seq[string] = @[]
     var functionDefs: seq[string] = @[]

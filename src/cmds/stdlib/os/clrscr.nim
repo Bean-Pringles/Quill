@@ -58,24 +58,14 @@ proc osclrscrIRGenerator*(
     elif target == "rust":
         var functionsDef = ""
 
-        if not ("use std::process::Command;" in commandsCalled):
-            commandsCalled.add("use std::process::Command;")
-            functionsDef &= "use std::process::Command;\n"
-
-        let rustCode = "Command::new(if cfg!(target_os = \"windows\") { \"cmd\" } else { \"clear\" })\n" &
-                       "    .args(if cfg!(target_os = \"windows\") { &[\"/C\", \"cls\"] } else { &[] as &[&str] })\n" &
-                       "    .status().unwrap();\n"
+        let rustCode = "print!(\"\\x1b[H\\x1b[2J\");\n"
 
         return ("", functionsDef, rustCode, commandsCalled, commandNum + 1, vars, @[])
 
     elif target == "python":
         var functionsDef = ""
 
-        if not ("import os as _os" in commandsCalled):
-            commandsCalled.add("import os as _os")
-            functionsDef &= "import os as _os\n"
-
-        let pythonCode = "_os.system('cls' if _os.name == 'nt' else 'clear')"
+        let pythonCode = "print('\x1b[H\x1b[2J', end='')"
 
         return ("", functionsDef, pythonCode, commandsCalled, commandNum + 1, vars, @[])
 

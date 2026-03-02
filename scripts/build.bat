@@ -10,7 +10,7 @@ echo [*] Running build script...
 REM Run build.nim and exit if it fails
 nim r build.nim
 IF ERRORLEVEL 1 (
-    echo [ERROR] build.nim failed. Aborting.
+    echo [!] build.nim failed. Aborting.
     exit /b 1
 )
 
@@ -22,7 +22,7 @@ IF EXIST ..\src\compiler.exe DEL ..\src\compiler.exe
 REM Compile in release mode and exit if it fails
 nim c -d:release --opt:size -d:danger -d:strip --passL:-s ..\src\compiler.nim
 IF ERRORLEVEL 1 (
-    echo [ERROR] compiler.nim compilation failed. Aborting.
+    echo [!] compiler.nim compilation failed. Aborting.
     exit /b 1
 )
 
