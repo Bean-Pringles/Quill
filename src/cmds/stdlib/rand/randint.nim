@@ -14,8 +14,10 @@ proc randrandintIRGenerator*(
         echo "[!] Error on line " & $lineNumber & ": randint command requires at least 2 arguments"
         quit(1)
 
-    let smallVal = args[0]
-    let bigVal = args[1]
+    # Evaluate arguments to handle both compile-time and runtime values
+    var (minVal, _, isMinRuntime) = evalExpression(args[0], vars, target, lineNumber)
+    var (maxVal, _, isMaxRuntime) = evalExpression(args[1], vars, target, lineNumber)
+    
     var globalDecl: string = ""
     var newCommandNum = commandNum
     var entryCode: string = ""
@@ -36,8 +38,40 @@ proc randrandintIRGenerator*(
             commandsCalled.add("randRangeFunc")
             globalDecl &= "define i32 @rand_range(i32 %min, i32 %max) {\nentry:\n    %seed = call i32 @make_seed()\n    %next = call i32 @lcg_next(i32 %seed)\n\n    %range = sub i32 %max, %min\n    %range1 = add i32 %range, 1\n\n    %mod = urem i32 %next, %range1\n    %result = add i32 %mod, %min\n\n    ret i32 %result\n}\n\n"
 
+        # Resolve runtime arguments to actual registers
+        var minArg: string
+        var maxArg: string
+        
+        if isMinRuntime:
+            if minVal in vars:
+                let (varType, varValue, _, _) = vars[minVal]
+                if varType.startsWith("ssa_"):
+                    minArg = varValue  # Already has % prefix
+                else:
+                    let loadReg = "%randmin_" & $randrandintCounter
+                    entryCode &= "    " & loadReg & " = load i32, ptr %" & minVal & ", align 4\n"
+                    minArg = loadReg
+            else:
+                minArg = minVal
+        else:
+            minArg = minVal
+        
+        if isMaxRuntime:
+            if maxVal in vars:
+                let (varType, varValue, _, _) = vars[maxVal]
+                if varType.startsWith("ssa_"):
+                    maxArg = varValue  # Already has % prefix
+                else:
+                    let loadReg = "%randmax_" & $randrandintCounter
+                    entryCode &= "    " & loadReg & " = load i32, ptr %" & maxVal & ", align 4\n"
+                    maxArg = loadReg
+            else:
+                maxArg = maxVal
+        else:
+            maxArg = maxVal
+
         # Generate the SSA value in entryCode
-        entryCode = "    %" & ssaName & " = call i32 @rand_range(i32 " & smallVal & ", i32 " & bigVal & ")\n"
+        entryCode &= "    %" & ssaName & " = call i32 @rand_range(i32 " & minArg & ", i32 " & maxArg & ")\n"
         
         # Register with "ssa_i32" type so llvmPost skips creating alloca
         vars[ssaName] = ("ssa_i32", "%" & ssaName, 0, false)
@@ -47,28 +81,38 @@ proc randrandintIRGenerator*(
     
     elif target == "batch":
         let varName = "randint_" & $randrandintCounter
-        let cmd = "SET /A " & varName & "=(%RANDOM% * (" & bigVal & " - " & smallVal & " + 1) / 32768) + " & smallVal
+        let cmd = "SET /A " & varName & "=(%RANDOM% * (" & maxVal & " - " & minVal & " + 1) / 32768) + " & minVal & "\n"
+        
+        # Add to vars so it can be referenced by other commands
+        vars[varName] = ("i32", varName, 0, false)
+        
         inc randrandintCounter
         return ("", "", cmd, commandsCalled, newCommandNum, vars, @[varName])
-    
+
     elif target == "rust":
         if "use rand::Rng;" notin commandsCalled:
             commandsCalled.add("use rand::Rng;")
             globalDecl = "use rand::Rng;\n"
 
         let varName = "randint_" & $randrandintCounter
-        entryCode = "let " & varName & ": i32 = rng.gen_range(" & smallVal & ".." & bigVal & ");"
+        entryCode = "let " & varName & ": i32 = rand::thread_rng().gen_range(" & minVal & "..=" & maxVal & ");\n"
+        
+        # Add to vars so it can be referenced by other commands
+        vars[varName] = ("i32", varName, 0, false)
+        
         inc randrandintCounter
         return (globalDecl, "", entryCode, commandsCalled, newCommandNum, vars, @[varName])
-    
+
     elif target == "python":
         if "import random" notin commandsCalled:
             commandsCalled.add("import random")
             globalDecl = "import random\n"
         
         let varName = "randint_" & $randrandintCounter
-        entryCode = varName & " = random.randint(" & smallVal & ", " & bigVal & ")"
+        entryCode = varName & " = random.randint(" & minVal & ", " & maxVal & ")\n"
+        
+        # Add to vars so it can be referenced by other commands
+        vars[varName] = ("i32", varName, 0, false)
+        
         inc randrandintCounter
         return (globalDecl, "", entryCode, commandsCalled, newCommandNum, vars, @[varName])
-    
-    return ("", "", "", commandsCalled, commandNum, vars, @[])
