@@ -9,7 +9,7 @@ echo "[*] Cleaning old test files"
 # -------------------------
 # Define tests
 # -------------------------
-tests=(types clear expressions_advanced expressions_basic expressions_edge_cases expressions sleep)
+tests=(types clear expressions_advanced expressions_basic expressions_edge_cases expressions sleep exit exitRuntime)
 
 # -------------------------
 # Clean build outputs

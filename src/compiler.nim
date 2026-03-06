@@ -351,6 +351,8 @@ when isMainModule:
         elif target == "rust":
             if functionDef != "":
                 functionDefs.add(functionDef)
+            if globalDecl != "":
+                globalDecls.add(globalDecl)
             if otherCode != "":
                 entryCode.add(otherCode)
         
@@ -366,7 +368,7 @@ when isMainModule:
     
     elif target == "rust":
         # Runs the ending clause for rust targets
-        rustPost(filename, functionDefs, entryCode)
+        rustPost(filename, globalDecls, functionDefs, entryCode)
 
     elif target == "python":
         # Runs the ending clause for rust targets

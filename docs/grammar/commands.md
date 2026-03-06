@@ -11,6 +11,8 @@ import
 
 OS Library:
 clrscr
+exit
+sleep
 
 Rand Library
 randint

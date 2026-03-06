@@ -12,7 +12,9 @@ files = [
     "expressions_basic",
     "expressions_edge_cases",
     "expressions",
-    "sleep"
+    "sleep",
+    "exit",
+    "exitRuntime"
 ]
 
 pwd = os.path.dirname(os.path.abspath(__file__))

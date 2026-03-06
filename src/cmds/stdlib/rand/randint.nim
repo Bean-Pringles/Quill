@@ -18,9 +18,10 @@ proc randrandintIRGenerator*(
     var (minVal, _, isMinRuntime) = evalExpression(args[0], vars, target, lineNumber)
     var (maxVal, _, isMaxRuntime) = evalExpression(args[1], vars, target, lineNumber)
     
-    var globalDecl: string = ""
+    var globalDecl: string
     var newCommandNum = commandNum
-    var entryCode: string = ""
+    var entryCode: string
+    var functionsDef: string
     
     let ssaName = "randint_" & $randrandintCounter
 
@@ -92,7 +93,8 @@ proc randrandintIRGenerator*(
     elif target == "rust":
         if "use rand::Rng;" notin commandsCalled:
             commandsCalled.add("use rand::Rng;")
-            globalDecl = "use rand::Rng;\n"
+            functionsDef = "use rand::Rng;\n"
+            globalDecl = "// cargo-deps: rand = \"0.8\"\n"
 
         let varName = "randint_" & $randrandintCounter
         entryCode = "let " & varName & ": i32 = rand::thread_rng().gen_range(" & minVal & "..=" & maxVal & ");\n"
@@ -101,12 +103,12 @@ proc randrandintIRGenerator*(
         vars[varName] = ("i32", varName, 0, false)
         
         inc randrandintCounter
-        return (globalDecl, "", entryCode, commandsCalled, newCommandNum, vars, @[varName])
+        return (globalDecl, functionsDef, entryCode, commandsCalled, newCommandNum, vars, @[varName])
 
     elif target == "python":
         if "import random" notin commandsCalled:
             commandsCalled.add("import random")
-            globalDecl = "import random\n"
+            functionsDef = "import random\n"
         
         let varName = "randint_" & $randrandintCounter
         entryCode = varName & " = random.randint(" & minVal & ", " & maxVal & ")\n"
@@ -115,4 +117,4 @@ proc randrandintIRGenerator*(
         vars[varName] = ("i32", varName, 0, false)
         
         inc randrandintCounter
-        return (globalDecl, "", entryCode, commandsCalled, newCommandNum, vars, @[varName])
+        return ("", functionsDef, entryCode, commandsCalled, newCommandNum, vars, @[varName])

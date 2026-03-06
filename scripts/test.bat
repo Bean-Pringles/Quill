@@ -10,7 +10,7 @@ echo [*] Cleaning old test files
 rem -------------------------
 rem Define tests
 rem -------------------------
-set tests=types clear expressions_advanced expressions_basic expressions_edge_cases expressions sleep
+set tests=types clear expressions_advanced expressions_basic expressions_edge_cases expressions sleep exit exitRuntime
 
 rem -------------------------
 rem Clean build outputs

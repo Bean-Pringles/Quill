@@ -1,0 +1,6 @@
+import rand
+import os
+
+print("Hello,")
+os.exit(rand.randint(0, 1))
+print("World")
