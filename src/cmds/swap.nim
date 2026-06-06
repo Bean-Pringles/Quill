@@ -27,30 +27,44 @@ proc swapIRGenerator*(
             errorVar = var2
         
         echo "[!] Error on line " & $lineNumber & ": The variable " & $errorVar & "is not declared."
+        quit(1)
     
     inc swapBuf
     var entryCode: string
     # Swap Values
-    let (var1Type, var1Val, var1StrLen, isMut1) = vars[var1]
-    let (var2Type, var2Val, var2StrLen, isMut2) = vars[var2]
-    vars[var1] = (var2Type, var2Val, var2StrLen, isMut2)
-    vars[var2] = (var1Type, var1Val, var1StrLen, isMut1)
+    let (var1Type, var1Val, var1StrLen, isConst1) = vars[var1]
+    let (var2Type, var2Val, var2StrLen, isConst2) = vars[var2]
+    vars[var1] = (var2Type, var2Val, var2StrLen, isConst2)
+    vars[var2] = (var1Type, var1Val, var1StrLen, isConst1)
 
+    echo isConst1
+    echo isConst2
 
-    if not(isMut1 and isMut2):
+    if (isConst1 and isConst2):
         var errorVarSwap: string
         
-        if not(isMut1):
+        if isConst1:
             errorVarSwap = var1
-        elif not(isMut2):
+        elif isConst2:
             errorVarSwap = var2
 
         echo "[!] Error on line " & $lineNumber & ":  The variable " & errorVarSwap & " is unmutable."
+        quit(1)
 
-    # if target in ["exe", "ir", "zip"]:
+    if var1Type != var2Type:
+        echo "[!] Error on line " & $lineNumber & ": The variables " & var1 & " and " & var2 & " are of different types."
+        quit(1)
+    
+    if target in ["exe", "ir", "zip"]:
+        entryCode = "; LLVM IR swap\n" &
+            "  \n%swap" & $swapBuf & " = alloca i32\n" &
+            "  store i32 %" & var1 & ", i32* %swap" & $swapBuf & "\n" &
+            "  %" & var1 & "_val = load i32, i32* %" & var2 & "\n" &
+            "  store i32 %" & var1 & "_val, i32* %" & var1 & "\n" &
+            "  %" & var2 & "_val = load i32, i32* %swap" & $swapBuf & "\n" &
+            "  \nstore i32 %" & var2 & "_val, i32* %" & var2
 
-
-    if target == "python":
+    elif target == "python":
         entryCode = "swap" & $swapBuf & " = " & $var1Val & "\ndel " & var2 & "\n" & var1 & " = " & var2 & "\n" & var2 & " = " & "swap" & $swapBuf & "\ndel" & "swap" & $swapBuf
 
     elif target == "batch":

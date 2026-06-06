@@ -1,7 +1,7 @@
 let x: int = 5
 let y: int = 10
 
-swap x, y
+swap(x, y)
 
 print(x) # 10
 print(y) # 5
