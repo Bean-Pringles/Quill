@@ -7,10 +7,17 @@ SET startingDir=%CD%
 cd /d %~dp0
 
 set "found=false"
+set "foundHide=false"
 
 for %%A in (%*) do (
     if /I "%%A"=="-nt" (
         set "found=true"
+    )
+)
+
+for %%A in (%*) do (
+    if /I "%%A"=="-close" (
+        set "foundHide=true"
     )
 )
 

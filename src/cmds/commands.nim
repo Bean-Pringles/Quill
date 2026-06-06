@@ -15,6 +15,7 @@ include "import.nim"
 include "input.nim"
 include "let.nim"
 include "print.nim"
+include "swap.nim"
 include "stdlib/os/clrscr.nim"
 include "stdlib/os/exit.nim"
 include "stdlib/os/sleep.nim"
@@ -27,6 +28,7 @@ proc initCommands*() =
   registerIRGenerator("input", inputIRGenerator)
   registerIRGenerator("let", letIRGenerator)
   registerIRGenerator("print", printIRGenerator)
+  registerIRGenerator("swap", swapIRGenerator)
   registerIRGenerator("os.clrscr", osclrscrIRGenerator)
   registerIRGenerator("os.exit", osexitIRGenerator)
   registerIRGenerator("os.sleep", ossleepIRGenerator)
