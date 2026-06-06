@@ -9,62 +9,91 @@
     {
       "scope": "comment.line.number-sign.quill",
       "settings": {
-        "foreground": "#6A9955",  // green for comments
+        "foreground": "#6A9955",
         "fontStyle": "italic"
       }
     },
     {
-      "scope": "keyword.control.quill",
+      "scope": [
+        "keyword.control.quill",
+        "keyword.control.import.quill"
+      ],
       "settings": {
-        "foreground": "#C586C0"  // purple for keywords
+        "foreground": "#C586C0"
       }
     },
     {
-      "scope": ["storage.type.quill", "entity.name.type.quill"],
+      "scope": "storage.type.quill",
       "settings": {
-        "foreground": "#DCDCAA"  // yellow for types/classes
+        "foreground": "#DCDCAA"
       }
     },
     {
-      "scope": "constant.numeric.quill",
+      "scope": [
+        "constant.numeric.integer.quill",
+        "constant.numeric.float.quill"
+      ],
       "settings": {
-        "foreground": "#FFA500"  // orange for numbers
+        "foreground": "#FFA500"
       }
     },
     {
       "scope": "string.quoted.double.quill",
       "settings": {
-        "foreground": "#4FC1FF"  // cyan for strings
+        "foreground": "#4FC1FF"
       }
     },
     {
       "scope": "constant.character.escape.quill",
       "settings": {
-        "foreground": "#D7BA7D"  // light orange for escape sequences
+        "foreground": "#D7BA7D"
       }
     },
     {
-      "scope": "entity.name.function.quill",
+      "scope": "entity.name.namespace.quill",
       "settings": {
-        "foreground": "#9CDCFE"  // light blue for function names
+        "foreground": "#4EC9B0"
       }
     },
     {
-      "scope": "variable.other.quill",
+      "scope": [
+        "entity.name.function.member.quill",
+        "entity.name.function.quill"
+      ],
       "settings": {
-        "foreground": "#9CDCFE"  // light blue for variables
+        "foreground": "#DCDCAA"
       }
     },
     {
-      "scope": ["punctuation.separator.quill", "punctuation.section.quill"],
+      "scope": [
+        "variable.other.quill",
+        "variable.other.member.quill"
+      ],
       "settings": {
-        "foreground": "#808080"  // gray for punctuation
+        "foreground": "#9CDCFE"
+      }
+    },
+    {
+      "scope": "punctuation.accessor.quill",
+      "settings": {
+        "foreground": "#D4D4D4"
+      }
+    },
+    {
+      "scope": [
+        "punctuation.separator.quill",
+        "punctuation.separator.key-value.quill",
+        "punctuation.separator.comma.quill",
+        "punctuation.terminator.quill"
+      ],
+      "settings": {
+        "foreground": "#808080"
       }
     },
     {
       "scope": "keyword.operator.quill",
       "settings": {
-        "foreground": "#D4D4D4"  // white/gray for operators
+        "foreground": "#D4D4D4"
       }
     }
   ]

@@ -8,6 +8,7 @@ const
 print
 input
 import
+swap
 
 OS Library:
 clrscr
