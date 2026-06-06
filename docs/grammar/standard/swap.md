@@ -1,27 +1,33 @@
-# print
+# swap
 
 ## Syntax
 
-Print accepts one argument, the item to print.
+Print accepts two arguements, the two variables to swap values
 
-```python
-print(<item to print>)
+```code
+swap <var 1>, <var 2>
 ```
-
-NOTE: The for print syntax is the exact same as Python
 
 ## Examples
 
 ```python
 let x: string = "World!"
-print("Hello,")
+let y: string = "Hello,"
+
+swap x, y
+
 print(x)
+print(y)
 ```
 
 This will print "Hello," on one line and "World!" on a separate line.
 
 ```python
-const x: i32 = 4
+let x: int = 3
+let y: int = 4
+
+swap x, y
+
 print(x)
 ```
 
